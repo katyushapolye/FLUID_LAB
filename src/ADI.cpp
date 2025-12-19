@@ -1547,8 +1547,9 @@ void ADI::SolveADIStep(MAC* gridAnt,MAC* gridSol,double time){
     //X_STEP_SOL.SetGrid(VelocityBorderFunction,PressureFunction,time+dt);
     //Y_STEP_SOL.SetGrid(VelocityBorderFunction,PressureFunction,time+dt);
     //Z_STEP_SOL.SetGrid(VelocityBorderFunction,PressureFunction,time+dt);
-    CPUTimer timer = CPUTimer();
-    timer.start();
+
+
+    double start = omp_get_wtime();
 
 
  
@@ -1575,9 +1576,9 @@ void ADI::SolveADIStep(MAC* gridAnt,MAC* gridSol,double time){
     SolveADI_Z_V_Step_OPENMP(&Y_STEP_SOL,&Z_STEP_SOL,gridAnt,time);
     SolveADI_Z_W_Step_OPENMP(&Y_STEP_SOL,&Z_STEP_SOL,gridAnt,time);
 
-    double end = GetWallTime();
+    double end = omp_get_wtime();
 
-    SIMULATION.lastADISolveTime = timer.stop() / 4.0;
+    SIMULATION.lastADISolveTime = end - start;
 
     //WriteToCSV("Data/Times/time_adi_16.csv",end-start);
 

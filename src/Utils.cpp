@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#include <amgx_c.h>
 #include "Definitions.h"
 #include <sstream>
 #include <iomanip>
@@ -277,33 +276,15 @@ std::string LevelConfigurationToString(LevelConfiguration config) {
     if(config == LevelConfiguration::OBSTACLE) {
         return "OBSTACLE";
     }
+    if(config == LevelConfiguration::ANALYTICAL) {
+        return "OBSTACLE";
+    }
     else {
         printf("INVALID LEVEL CONFIG - CHECK LEVEL FUNCTION \n");
         return "EMPTY";
     }
 }
 
-void PrintAMGXMatrix(AMGXSolver* AMGX_Handle, int MatSize) {
-    // First, just print some basic info about the matrix without downloading it
-    std::cout << "AMGX Matrix Info:" << std::endl;
-    std::cout << "Matrix size: " << MatSize << " x " << MatSize << std::endl;
-    
-    int nnz;
-    AMGX_matrix_get_nnz(AMGX_Handle->AmgxA, &nnz);
-    std::cout << "Non-zeros reported by AMGX: " << nnz << std::endl;
-    
-    // Add diagnostic info for solver
-    AMGX_SOLVE_STATUS status;
-    AMGX_solver_get_status(AMGX_Handle->solver, &status);
-    std::cout << "Solver status: " << status << std::endl;
-    
-    // Try to get some solver statistics if possible
-    int iterations = 0;
-    double residual = 0.0;
-    AMGX_solver_get_iterations_number(AMGX_Handle->solver, &iterations);
-    AMGX_solver_get_iteration_residual(AMGX_Handle->solver, 0, 0, &residual);
-    std::cout << "Iterations: " << iterations << ", Last residual: " << residual << std::endl;
-}
 
 bool WriteToCSV(double value, std::string levelString, std::string gridSize,std::string dataType) {
     try {

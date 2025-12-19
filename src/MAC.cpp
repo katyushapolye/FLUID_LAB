@@ -183,6 +183,24 @@ void MAC::SetLevelGeometry(int (*SolidMaskFunction)(int, int, int))
 
 }
 
+int MAC::GetFluidCellCount(){
+    int c = 0;
+    for (int i = 0; i < Ny; i++)
+    {
+        for (int j = 0; j < Nx; j++)
+        {
+             for (int k = 0; k < Nz; k++)
+            {
+            if(this->GetSolid(i,j,k) == FLUID_CELL){
+                c++;
+            }
+            }
+
+        }
+    }
+    return c;
+}
+
 void MAC::SetGrid(Vec3 (*VelocityFunction)(double, double, double, double), double (*PressureFunction)(double, double, double, double), double time)
 {
     for (int i = 0; i < Ny; i++)

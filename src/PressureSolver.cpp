@@ -26,10 +26,19 @@ void PressureSolver::InitializePressureSolver(MAC *grid,double dt)
     PressureSolver::Nx = SIMULATION.Nx;
     PressureSolver::Ny = SIMULATION.Ny;
     PressureSolver::Nz = SIMULATION.Nz;
-    PressureSolver::PRESSURE_MASK.reserve(Nx * Ny * Nz);
+    PressureSolver::PRESSURE_MASK.reserve(grid->GetFluidCellCount());
     PressureSolver::dt = dt;
     double dh = SIMULATION.dh;
     PressureSolver::IDP = VectorXd(Nx * Ny * Nz);
+    PressureSolver::IDP.setConstant(-1);
+
+
+
+    AMGX_initialize();
+
+    
+
+
 
     int c = 0;
     for (int i = 0; i < Ny; i++)
@@ -38,128 +47,102 @@ void PressureSolver::InitializePressureSolver(MAC *grid,double dt)
         {
             for (int k = 0; k < Nz; k++)
             {
-                // add the pressure mask
                 Tensor<double, 3> mask = Tensor<double, 3>(3, 3, 3);
                 mask.setZero();
-                if (grid->GetSolid(i, j, k) == SOLID_CELL || grid->GetSolid(i,j,k) == EMPTY_CELL || grid->GetSolid(i,j,k) == INFLOW_CELL)
+                
+                // ADD THIS BOUNDARY CHECK (like 2D version)
+                if (i == 0 || j == 0 || k == 0 || 
+                    i == Ny-1 || j == Nx-1 || k == Nz-1)
                 {
-                    
-                    PressureSolver::PRESSURE_MASK.push_back(mask); // all zero mask
+                    PressureSolver::PRESSURE_MASK.push_back(mask);
                     SetIDP(i, j, k, -1);
                     continue;
-
                 }
-                else
+                
+                // Now check for solid/empty/inflow
+                if (grid->GetSolid(i, j, k) == SOLID_CELL || 
+                    grid->GetSolid(i,j,k) == EMPTY_CELL || 
+                    grid->GetSolid(i,j,k) == INFLOW_CELL)
                 {
-                    NON_ZERO++; // the cell we are is not solid, this will count the
-                    // amount of non zero elements in the matrix
-
-                    // if not on a solid wall, we check all directions of the stencil, and
-                    // update the indexing grid
-
-                    if (grid->GetSolid(i + 1, j, k) == FLUID_CELL)
-                    {
-                        mask(2, 1, 1) = 1.0;  // top
-                        mask(1, 1, 1) -= 1.0; // center
-                        NON_ZERO++;
-                    }
-
-                    if (grid->GetSolid(i - 1, j, k) == FLUID_CELL)
-                    {
-                        mask(0, 1, 1) = 1.0;  // botton
-                        mask(1, 1, 1) -= 1.0; // center
-                        NON_ZERO++;           // the cell we are is not solid
-                    }
-
-                    if (grid->GetSolid(i, j + 1, k) == FLUID_CELL)
-                    {
-                        mask(1, 2, 1) = 1.0;  // left
-                        mask(1, 1, 1) -= 1.0; // center
-                        NON_ZERO++;           // the cell we are is not solid
-                    }
-
-                    if (grid->GetSolid(i, j - 1, k) == FLUID_CELL)
-                    {
-                        mask(1, 0, 1) = 1.0;  // right
-                        mask(1, 1, 1) -= 1.0; // center
-                        NON_ZERO++;           // the cell we are is not solid
-                    }
-
-                    if (grid->GetSolid(i, j, k + 1) == FLUID_CELL)
-                    {
-                        mask(1, 1, 2) = 1.0;  // foward
-                        mask(1, 1, 1) -= 1.0; // center
-                        NON_ZERO++;           // the cell we are is not solid
-                    }
-
-                    if (grid->GetSolid(i, j, k - 1) == FLUID_CELL)
-                    {
-                        mask(1, 1, 0) = 1.0;  // foward
-                        mask(1, 1, 1) -= 1.0; // center
-                        NON_ZERO++;           // the cell we are is not solid
-                    }
-
-
-                    
-
-                    if (grid->GetSolid(i + 1, j, k) == EMPTY_CELL)
-                    {
-
-                        mask(1, 1, 1) -= 1.0; // center
-                        NON_ZERO++;
-                    }
-
-                    if (grid->GetSolid(i - 1, j, k) == EMPTY_CELL)
-                    {
-
-                        mask(1, 1, 1) -= 1.0; // center
-                        NON_ZERO++;           // the cell we are is not solid
-                    }
-
-                    if (grid->GetSolid(i, j + 1, k) == EMPTY_CELL)
-                    {
-
-                        mask(1, 1, 1) -= 1.0; // center
-                        NON_ZERO++;           // the cell we are is not solid
-                    }
-
-                    if (grid->GetSolid(i, j - 1, k) == EMPTY_CELL)
-                    {
-
-                        mask(1, 1, 1) -= 1.0; // center
-                        NON_ZERO++;           // the cell we are is not solid
-                    }
-
-                    if (grid->GetSolid(i, j, k + 1) == EMPTY_CELL)
-                    {
-
-                        mask(1, 1, 1) -= 1.0; // center
-                        NON_ZERO++;           // the cell we are is not solid
-                    }
-
-                    if (grid->GetSolid(i, j, k - 1) == EMPTY_CELL)
-                    {
-
-                        mask(1, 1, 1) -= 1.0; // center
-                        NON_ZERO++;           // the cell we are is not solid
-                    }
-
-
-
-
-
-
-
-
-
-                    SetIDP(i, j, k, c);
-                    c++;
                     PressureSolver::PRESSURE_MASK.push_back(mask);
+                    SetIDP(i, j, k, -1);
+                    continue;
                 }
+                
+                // FLUID CELL - build stencil
+                NON_ZERO++; // diagonal entry
+                
+                // Check fluid neighbors (add off-diagonal entries)
+                if (grid->GetSolid(i + 1, j, k) == FLUID_CELL)
+                {
+                    mask(2, 1, 1) = 1.0;
+                    mask(1, 1, 1) -= 1.0;
+                    NON_ZERO++;
+                }
+                if (grid->GetSolid(i - 1, j, k) == FLUID_CELL)
+                {
+                    mask(0, 1, 1) = 1.0;
+                    mask(1, 1, 1) -= 1.0;
+                    NON_ZERO++;
+                }
+                if (grid->GetSolid(i, j + 1, k) == FLUID_CELL)
+                {
+                    mask(1, 2, 1) = 1.0;
+                    mask(1, 1, 1) -= 1.0;
+                    NON_ZERO++;
+                }
+                if (grid->GetSolid(i, j - 1, k) == FLUID_CELL)
+                {
+                    mask(1, 0, 1) = 1.0;
+                    mask(1, 1, 1) -= 1.0;
+                    NON_ZERO++;
+                }
+                if (grid->GetSolid(i, j, k + 1) == FLUID_CELL)
+                {
+                    mask(1, 1, 2) = 1.0;
+                    mask(1, 1, 1) -= 1.0;
+                    NON_ZERO++;
+                }
+                if (grid->GetSolid(i, j, k - 1) == FLUID_CELL)
+                {
+                    mask(1, 1, 0) = 1.0;
+                    mask(1, 1, 1) -= 1.0;
+                    NON_ZERO++;
+                }
+                
+                // FIX 2: Check empty neighbors (modify diagonal only, NO NON_ZERO++)
+                if (grid->GetSolid(i + 1, j, k) == EMPTY_CELL)
+                {
+                    mask(1, 1, 1) -= 1.0;
+                    // DO NOT increment NON_ZERO here!
+                }
+                if (grid->GetSolid(i - 1, j, k) == EMPTY_CELL)
+                {
+                    mask(1, 1, 1) -= 1.0;
+                }
+                if (grid->GetSolid(i, j + 1, k) == EMPTY_CELL)
+                {
+                    mask(1, 1, 1) -= 1.0;
+                }
+                if (grid->GetSolid(i, j - 1, k) == EMPTY_CELL)
+                {
+                    mask(1, 1, 1) -= 1.0;
+                }
+                if (grid->GetSolid(i, j, k + 1) == EMPTY_CELL)
+                {
+                    mask(1, 1, 1) -= 1.0;
+                }
+                if (grid->GetSolid(i, j, k - 1) == EMPTY_CELL)
+                {
+                    mask(1, 1, 1) -= 1.0;
+                }
+                
+                SetIDP(i, j, k, c);
+                c++;
+                PressureSolver::PRESSURE_MASK.push_back(mask);
             }
         }
     }
-
 
 
 
@@ -169,7 +152,7 @@ void PressureSolver::InitializePressureSolver(MAC *grid,double dt)
     collums = (int *)malloc(sizeof(int) * NON_ZERO);
     rows = (int *)malloc(sizeof(int) * NON_ZERO);
     values = (double *)calloc(NON_ZERO,sizeof(double));
-    int MatSize = (Nx - 2) * (Ny - 2) * (Nz - 2);
+    int MatSize = grid->GetFluidCellCount();
 
 
 
@@ -186,72 +169,114 @@ void PressureSolver::InitializePressureSolver(MAC *grid,double dt)
                 Tensor<double, 3> mask = GetPressureMask(i, j, k);
 
             
-                // if we are not on a empty mask (we could also check idp for -1!)
-                if (mask(1, 1, 1) != 0)
+                // get row index once
+                int MAT_LINE = GetIDP(i, j, k);
+
+                // if this cell is not a FLUID cell, skip entirely
+                if (MAT_LINE == -1)
+                    continue;
+
+                // ------------------------------------------------------------
+                // Diagonal (center)
+                // ------------------------------------------------------------
+                if (mask(1, 1, 1) != 0.0)
                 {
-                    MAT_LINE = GetIDP(i, j, k);
-                    rows[c] = MAT_LINE;
+                    rows[c]    = MAT_LINE;
                     collums[c] = MAT_LINE;
-                    values[c] += mask(1, 1, 1); // get the center of the stencil
+                    values[c] += mask(1, 1, 1);
                     c++;
                 }
 
-                // now onto each collum of this row, which are the neighboors
+                // ------------------------------------------------------------
+                // +X neighbor
+                // ------------------------------------------------------------
                 if (mask(2, 1, 1) != 0.0)
                 {
-                    MAT_COLLUM = GetIDP(i + 1, j, k);
-                    rows[c] = MAT_LINE;
-                    collums[c] = MAT_COLLUM;
-                    values[c] +=  mask(2, 1, 1);
-                    c++;
+                    int MAT_COLLUM = GetIDP(i + 1, j, k);
+                    if (MAT_COLLUM != -1)
+                    {
+                        rows[c]    = MAT_LINE;
+                        collums[c] = MAT_COLLUM;
+                        values[c] += mask(2, 1, 1);
+                        c++;
+                    }
                 }
 
+                // ------------------------------------------------------------
+                // -X neighbor
+                // ------------------------------------------------------------
                 if (mask(0, 1, 1) != 0.0)
                 {
-                    MAT_COLLUM = GetIDP(i - 1, j, k);
-                    rows[c] = MAT_LINE;
-                    collums[c] = MAT_COLLUM;
-                    values[c] += mask(0, 1, 1);
-                    c++;
+                    int MAT_COLLUM = GetIDP(i - 1, j, k);
+                    if (MAT_COLLUM != -1)
+                    {
+                        rows[c]    = MAT_LINE;
+                        collums[c] = MAT_COLLUM;
+                        values[c] += mask(0, 1, 1);
+                        c++;
+                    }
                 }
 
+                // ------------------------------------------------------------
+                // +Y neighbor
+                // ------------------------------------------------------------
                 if (mask(1, 2, 1) != 0.0)
                 {
-
-                    MAT_COLLUM = GetIDP(i, j + 1, k);
-                    rows[c] = MAT_LINE;
-                    collums[c] = MAT_COLLUM;
-                    values[c] += mask(1, 2, 1);
-                    c++;
-
+                    int MAT_COLLUM = GetIDP(i, j + 1, k);
+                    if (MAT_COLLUM != -1)
+                    {
+                        rows[c]    = MAT_LINE;
+                        collums[c] = MAT_COLLUM;
+                        values[c] += mask(1, 2, 1);
+                        c++;
+                    }
                 }
 
+                // ------------------------------------------------------------
+                // -Y neighbor
+                // ------------------------------------------------------------
                 if (mask(1, 0, 1) != 0.0)
                 {
-                    MAT_COLLUM = GetIDP(i, j - 1, k);
-                    rows[c] = MAT_LINE;
-                    collums[c] = MAT_COLLUM;
-                    values[c] += mask(1, 0, 1);
-                    c++;
+                    int MAT_COLLUM = GetIDP(i, j - 1, k);
+                    if (MAT_COLLUM != -1)
+                    {
+                        rows[c]    = MAT_LINE;
+                        collums[c] = MAT_COLLUM;
+                        values[c] += mask(1, 0, 1);
+                        c++;
+                    }
                 }
 
+                // ------------------------------------------------------------
+                // +Z neighbor
+                // ------------------------------------------------------------
                 if (mask(1, 1, 2) != 0.0)
                 {
-                    MAT_COLLUM = GetIDP(i, j, k + 1);
-                    rows[c] = MAT_LINE;
-                    collums[c] = MAT_COLLUM;
-                    values[c] += mask(1, 1, 2);
-                    c++;
+                    int MAT_COLLUM = GetIDP(i, j, k + 1);
+                    if (MAT_COLLUM != -1)
+                    {
+                        rows[c]    = MAT_LINE;
+                        collums[c] = MAT_COLLUM;
+                        values[c] += mask(1, 1, 2);
+                        c++;
+                    }
                 }
 
+                // ------------------------------------------------------------
+                // -Z neighbor
+                // ------------------------------------------------------------
                 if (mask(1, 1, 0) != 0.0)
                 {
-                    MAT_COLLUM = GetIDP(i, j, k - 1);
-                    rows[c] = MAT_LINE;
-                    collums[c] = MAT_COLLUM;
-                    values[c] += mask(1, 1, 0);
-                    c++;
+                    int MAT_COLLUM = GetIDP(i, j, k - 1);
+                    if (MAT_COLLUM != -1)
+                    {
+                        rows[c]    = MAT_LINE;
+                        collums[c] = MAT_COLLUM;
+                        values[c] += mask(1, 1, 0);
+                        c++;
+                    }
                 }
+
 
                 //testing stuff, second order newmman boundary condition
   
@@ -293,33 +318,41 @@ void PressureSolver::InitializePressureSolver(MAC *grid,double dt)
     writeSparseMatrixToFile(PRESSURE_MATRIX_EIGEN,"Exports/Eigen/PressureMat.txt");
 
     PRESSURE_MATRIX = coo_to_csr(rows,collums,values,NON_ZERO,MatSize,MatSize);
+    PressureSolver::AMGX_Handle = new AMGXSolver();
 
     free(collums);
     free(rows);
     free(values);
-    AMGX_initialize();
-
-    PressureSolver::AMGX_Handle = new AMGXSolver();
 
 
-    const char* config = "config_version=2, solver=BICGSTAB, preconditioner=MULTICOLOR_GS, "
-    "monitor_residual=1, store_res_history=1, "
-    "convergence=ABSOLUTE, tolerance=1e-12, " //changed tol to less to see more pertubations
-    "max_iters=5000, norm=LMAX";
-    AMGX_config_create_from_file(&AMGX_Handle->config,"solver_config.txt");
-    //AMGX_config_create(&AMGX_Handle->config, config);
-    AMGX_resources_create_simple(&AMGX_Handle->rsrc,AMGX_Handle->config);
+    AMGX_config_create(&AMGX_Handle->config,
+    "config_version=2, "
+    "solver=BICGSTAB, "
+    "preconditioner=MULTICOLOR_GS, "
+    "monitor_residual=1, "
+    "store_res_history=1, "
+    "convergence=ABSOLUTE, "
+    "tolerance=1e-12, "
+    "max_iters=5000, "
+    "norm=LMAX");
+
 
     //Creating AMGX handles check for the negative thing
-                                                            //run on device (GPU), double precision for all, integer or indexes
-    AMGX_matrix_create(&AMGX_Handle->AmgxA,AMGX_Handle->rsrc,AMGX_mode_dDDI);
-    AMGX_vector_create(&AMGX_Handle->Amgxb,AMGX_Handle->rsrc,AMGX_mode_dDDI);
-    AMGX_vector_create(&AMGX_Handle->Amgxx,AMGX_Handle->rsrc,AMGX_mode_dDDI);
-    for(int i=0;i<NON_ZERO;i++){
-        PRESSURE_MATRIX->values[i] = PRESSURE_MATRIX->values[i]* (1.0)/(dh*dh);
-    }
+    //run on device (GPU), double precision for all, integer or indexes
+   
+    AMGX_resources_create_simple(&AMGX_Handle->rsrc, AMGX_Handle->config);
 
-    //the amgx matrix is not populated with the coeficient 1/dh**2
+    AMGX_matrix_create(&AMGX_Handle->AmgxA, AMGX_Handle->rsrc, AMGX_mode_dDDI);
+    AMGX_vector_create(&AMGX_Handle->Amgxb, AMGX_Handle->rsrc, AMGX_mode_dDDI);
+    AMGX_vector_create(&AMGX_Handle->Amgxx, AMGX_Handle->rsrc, AMGX_mode_dDDI);
+
+
+    for (int i = 0; i < NON_ZERO; i++) {
+    PRESSURE_MATRIX->values[i] *= (1.0 / (dh * dh));
+    }   
+
+
+
     AMGX_matrix_upload_all(AMGX_Handle->AmgxA,MatSize,NON_ZERO,1,1,PRESSURE_MATRIX->row_ptr,PRESSURE_MATRIX->col_ind,PRESSURE_MATRIX->values,nullptr);
     AMGX_vector_set_zero(AMGX_Handle->Amgxx,MatSize,1);
     AMGX_vector_set_zero(AMGX_Handle->Amgxb,MatSize,1);
@@ -328,7 +361,6 @@ void PressureSolver::InitializePressureSolver(MAC *grid,double dt)
     AMGX_solver_create(&AMGX_Handle->solver,AMGX_Handle->rsrc,AMGX_mode_dDDI,AMGX_Handle->config);
     AMGX_solver_setup(AMGX_Handle->solver,AMGX_Handle->AmgxA);
 
-    //PrintAMGXMatrix(AMGX_Handle,MatSize);
 
 
 
@@ -337,79 +369,37 @@ void PressureSolver::InitializePressureSolver(MAC *grid,double dt)
 }
 
 void PressureSolver::SolvePressure_EIGEN(MAC* grid){
-    double dh = grid->dh;
-    int MatSize = (Nx - 2) * (Ny - 2) * (Nz - 2);
+    CPUTimer timer;
+    timer.start();
+     double dh = grid->dh;
+    int MatSize = grid->GetFluidCellCount(); // number of FLUID cells
+
     VectorXd LHS = VectorXd(MatSize);
     
     LHS.setZero();
-
-
     int c = 0;
-
-    double mean = 0;
-
-
-
+    double mean = 0.0;  // FIX: Initialize to zero!
+    
+    // Build RHS vector
     for (int i = 1; i < Ny - 1; i++)
     {
         for (int j = 1; j < Nx - 1; j++)
         {
             for (int k = 1; k < Nz - 1; k++)
             {
-                //imposing boundary conditioons the SHITTTIEST way, JUST FOR TESTING!
-                //LHS(c) =  (1.0/dt)*grid.GetDivergencyAt(i,j,k);
-                LHS(c) =  (1.0/dt)*grid->GetDivergencyAt(i,j,k); //for SPD
+                int id = GetIDP(i,j,k);
+                if (id == -1) continue;
 
-                mean += LHS(c);
+                LHS(id) = (1.0/dt) * grid->GetDivergencyAt(i,j,k);
+                mean += LHS(id);
 
-
-                //supprots inflow oon the -x to +x dir
-                if(grid->GetSolid(i,j-1,k) == INFLOW_CELL){
-                    LHS(c) += -(1.0/dt)*( grid->GetU(i,1,k)-SIMULATION.VelocityBoundaryFunction(1*dh,i*dh + dh/2.0,k*dh +dh/2.0,0).u );//amayybe minus
+                if(grid->GetSolid(i,j-1,k) == INFLOW_CELL)
+                {
+                    LHS(id) += -(1.0/dt) *
+                        (grid->GetU(i,1,k) -
+                         SIMULATION.VelocityBoundaryFunction(
+                            dh, i*dh + dh/2.0, k*dh + dh/2.0, 0).u);
                 }
-                //if(j == 1 && i > Ny/2){
-                //    LHS(c) += -(1.0/dt)*( grid.GetU(i,1,k)-BACKWARDS_FACING_STEP(1*dh,i*dh + dh/2.0,k*dh +dh/2.0,0).u  );//amayybe minus
-                //}
-                
-               // if(k == 1){
-               //     //the term on the back goes to the font, since we multiply both sides foor -1 for conditioning, it goes positive
-               //     //std::cout <<  LHS(c) << std::endl;
-               //     LHS(c) +=  -(1.0/(dh*dh)) *grid.GetP(i,j,0);
-//
-               // }
-//
-               // if(k == Nz-2){
-               //     //the term on the back goes to the font, since we multiply both sides foor -1 for conditioning, it goes positive
-               //     LHS(c) +=   -(1.0/(dh*dh))*grid.GetP(i,j,Nz-1);
-//
-               // }
-//
-               // if(i == 1){
-               //     //the term on the back goes to the font, since we multiply both sides foor -1 for conditioning, it goes positive
-               //     LHS(c) +=   -(1.0/(dh*dh))*grid.GetP(0,j,k);
-//
-               // }
-//
-               // if(i == Ny-2){
-               //     //the term on the back goes to the font, since we multiply both sides foor -1 for conditioning, it goes positive
-               //     LHS(c) +=   -(1.0/(dh*dh))*grid.GetP(Ny-1,j,k);
-//
-               // }
-//
-               // if(j ==1){
-               //     //the term on the back goes to the font, since we multiply both sides foor -1 for conditioning, it goes positive
-               //     LHS(c) +=   -(1.0/(dh*dh))*grid.GetP(i,0,k);
-//
-               // }
-//
-               // if(j == Nx-2){
-               //     //the term on the back goes to the font, since we multiply both sides foor -1 for conditioning, it goes positive
-               //     LHS(c) +=   -(1.0/(dh*dh))*grid.GetP(i,Nx-1,k);
-//
-               // }
-
-
-                c++;
             }
         }
     }
@@ -437,13 +427,18 @@ void PressureSolver::SolvePressure_EIGEN(MAC* grid){
         {
             for (int k = 1; k < Nz - 1; k++)
             {
-                grid->SetP(i,j,k,SOL(c));
-                c++;
+                int id = GetIDP(i,j,k);
+                if (id == -1) continue;
+                grid->SetP(i,j,k, SOL(id));
             }
         }
     }
 
     grid->SetNeumannBorderPressure();
+
+        double end = GetWallTime();
+
+    SIMULATION.lastPressureSolveTime = timer.stop();
 
     
 
@@ -454,17 +449,16 @@ void PressureSolver::SolvePressure_EIGEN(MAC* grid){
 
 
 void PressureSolver::SolvePressure_AMGX(MAC* grid){
-    CPUTimer timer;
+CPUTimer timer;
     timer.start();
     double dh = grid->dh;
-    int MatSize = (Nx - 2) * (Ny - 2) * (Nz - 2);
+    int MatSize = grid->GetFluidCellCount();
     double* LHS = (double*)calloc(MatSize,sizeof(double));
     double* SOL = (double*)calloc(MatSize,sizeof(double));
 
 
 
     int c = 0;
-
     double mean = 0;
 
 
@@ -489,6 +483,7 @@ void PressureSolver::SolvePressure_AMGX(MAC* grid){
                 }
                 }
             
+                //test BC
                 //if(j == 1 && i > Ny/2){
                 //    LHS(c) += -(1.0/dt)*( grid.GetU(i,1,k)-BACKWARDS_FACING_STEP(1*dh,i*dh + dh/2.0,k*dh +dh/2.0,0).u  );//amayybe minus
                 //}
@@ -532,7 +527,7 @@ void PressureSolver::SolvePressure_AMGX(MAC* grid){
 
 
 
-                c++;
+
             }
             
         }
@@ -562,21 +557,16 @@ void PressureSolver::SolvePressure_AMGX(MAC* grid){
     //as crazy as it soundds, the error might be on the pressure transfer when there is a solid in the middle of the canal
     c = 0;
 
-    for (int i = 1; i < Ny - 1; i++)
-    {
-        for (int j = 1; j < Nx - 1; j++)
-        {
-            for (int k = 1; k < Nz - 1; k++)
-            {
-                if(GetIDP(i,j,k) != -1){
-                //if(grid->GetSolid(i,j,k) ==  FLUID_CELL){
-                    grid->SetP(i,j,k,SOL[c]);
-                    c++;
-                }
-
+    for (int i = 1; i < Ny - 1; i++) {
+        for (int j = 1; j < Nx - 1; j++) {
+            for (int k = 1; k < Nz - 1; k++) {
+                int id = GetIDP(i,j,k);
+                if (id == -1) continue;
+                grid->SetP(i,j,k, SOL[id]);
             }
         }
     }
+
 
     grid->SetNeumannBorderPressure();
 
@@ -594,7 +584,6 @@ void PressureSolver::SolvePressure_AMGX(MAC* grid){
     AMGX_vector_set_zero(AMGX_Handle->Amgxb,MatSize,1);
 
 
-
 }
 
 
@@ -608,6 +597,7 @@ void PressureSolver::ProjectPressure(MAC* grid){
         {
             for (int k = 1; k < Nz-1; k++) 
             {
+
                 //if the cell we are is not a solid wall, then we update
                 if( !(grid->GetSolid(i,j,k) == SOLID_CELL || grid->GetSolid(i,j-1,k)==SOLID_CELL)){
                     grid->SetU(i,j,k, 
@@ -728,7 +718,6 @@ void PressureSolver::ProjectPressure(MAC* grid){
 
 
 int PressureSolver::GetSolverIterations(){
-    int iterations;
-    AMGX_solver_get_iterations_number(AMGX_Handle->solver, &iterations);
+    int iterations = -1 ;
     return iterations;
 }

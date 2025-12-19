@@ -109,8 +109,7 @@ namespace ConfigReader {
         // Configure simulation parameters
         SIMULATION.dt = getDouble("TIME_STEP", config.dt);
         SIMULATION.RE = getDouble("REYNOLDS_NUMBER", config.RE);
-        double coef = getDouble("EPS_COEFICIENT", 1.0);
-        SIMULATION.EPS = coef/SIMULATION.RE;
+        SIMULATION.EPS = getDouble("VISCOSITY", 0.01);
         SIMULATION.GRID_SIZE = getInt("GRID_SIZE", config.GRID_SIZE);
         SIMULATION.TOLERANCE = getDouble("TOLERANCE", config.TOLERANCE);
         SIMULATION.ExportPath = getString("EXPORT_BASE_PATH", "Exports");
@@ -137,6 +136,9 @@ namespace ConfigReader {
         else if (levelType == "OBSTACLE"){
             SIMULATION.level = LevelConfiguration::OBSTACLE;
         }
+        else if (levelType == "ANALYTICAL"){
+            SIMULATION.level = LevelConfiguration::OBSTACLE;
+        }
         else {
             std::cerr << "Warning: Unknown level type '" << levelType << "'. Using default." << std::endl;
         }
@@ -156,6 +158,11 @@ namespace ConfigReader {
             SIMULATION.SolidMaskFunction = OBSTACLE_SOLID_MASK;
             SIMULATION.VelocityBoundaryFunction = OBSTACLE_FLOW;
             SIMULATION.PressureBoundaryFunction = OBSTACLE_FLOW_PRESSURE;
+        }
+        else if(SIMULATION.level == LevelConfiguration::ANALYTICAL){
+            SIMULATION.SolidMaskFunction = EMPTY_SOLID_MASK;
+            SIMULATION.VelocityBoundaryFunction = TAYLOR_GREEN_VORTEX_VELOCITY;
+            SIMULATION.PressureBoundaryFunction = TAYLOR_GREEN_VORTEX_PRESSURE;
         }
 
         else{printf("FAILED LEVEL ASSERTION!\n");}

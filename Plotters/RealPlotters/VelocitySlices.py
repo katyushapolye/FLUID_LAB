@@ -116,13 +116,13 @@ def get_velocity_profiles(resolution, reynolds_number, factor=20.0):
 
 def main():
     # Fixed Reynolds number
-    reynolds_number = 389
+    reynolds_number = 100
     
     # Multiple resolutions to compare
-    resolutions = [16,32, 64]
+    resolutions = [16,32]
     
     # Scale factor for velocity
-    factor = 80.0
+    factor = 10.0
     
     # Define absolute x positions for cuts in physical units
     x_physical_cuts = [0.5, 1, 1.53, 2, 3.06, 4.0]

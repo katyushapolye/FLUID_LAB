@@ -1,5 +1,6 @@
 
-#pragma once
+#ifndef DEFINITIONS_H
+#define DEFINITIONS_H
 
 
 #include "MAC.h"
@@ -51,10 +52,52 @@ struct SIMULATION_CONFIG{
     double lastPressureMatAssemblyTime;
     double lastPressureSolveTime;
     double lastADISolveTime;
+
+    double pressureResidual;
     
 
 };
 
+struct SimulationTelemetry {
+    std::vector<double> time;
+    std::vector<double> div_sum;
+    std::vector<double> div_sum_before_proj;
+    std::vector<double> cfl;
+    std::vector<double> residual;
+    std::vector<double> cpu_time;
+    std::vector<double> gpu_time;
+    std::vector<double> pressure_residual; 
+
+    size_t max_samples = 5000;
+
+    void Push(double t,
+              double div,
+              double div_b4,
+              double cfl_,
+              double res,
+              double cpu,
+              double gpu)
+    {
+        auto push = [&](std::vector<double>& v, double x) {
+            v.push_back(x);
+            if (v.size() > max_samples)
+                v.erase(v.begin());
+        };
+
+        push(time, t);
+        push(div_sum, div);
+        push(div_sum_before_proj, div_b4);
+        push(cfl, cfl_);
+        push(residual, res);
+        push(cpu_time, cpu);
+        push(gpu_time, gpu);
+    }
+};
+
+
+
 
 inline SIMULATION_CONFIG SIMULATION;
+inline SimulationTelemetry TELEMETRY;
+#endif
 

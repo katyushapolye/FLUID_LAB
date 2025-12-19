@@ -41,6 +41,7 @@ private:
 
     static CSRMatrix* PRESSURE_MATRIX;
 
+
     static AMGXSolver* AMGX_Handle;
 
 

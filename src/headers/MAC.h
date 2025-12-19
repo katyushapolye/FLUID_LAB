@@ -72,6 +72,7 @@ public:
     double MaxAbsoluteDifferencePressure(MAC& grid);
 
     double GetMaxVelocity();
+    int GetFluidCellCount();
 
     double GetDivSum();
 
@@ -79,6 +80,7 @@ public:
     void CopyGrid(MAC& grid);
 
     void DestroyGrid();
+
     
 
 
@@ -116,7 +118,7 @@ public:
     inline void SetP(int i,int j, int k,double value){this->p[i * ((this->Nx)*(this->Nz))  + (j*this->Nz)  + k ] = value;};
 
     inline double GetSolid(int i,int j, int k){ return this->SOLID_MASK[i * ((this->Nx)*(this->Nz))  + (j*this->Nz)  + k ];};
-    inline void SetSolid(int i,int j, int k,int value){this->SOLID_MASK(i * ((this->Nx)*(this->Nz))  + (j*this->Nz)  + k ) = value;};
+    inline void SetSolid(int i,int j, int k,int value){this->SOLID_MASK[i * ((this->Nx)*(this->Nz))  + (j*this->Nz)  + k ] = value;};
 };
 #endif
 

@@ -7,8 +7,6 @@
 #include <tuple>
 #include <string>
 #include <amgx_c.h>
-#include <sys/time.h>   // For timeval struct and gettimeofday() (used in GetWallTime)
-#include <sys/resource.h>   // For rusage struct and getrusage() (used in GetCpuTime)
 #include <ctime>
 #include <utility> // for std::forward
 
@@ -33,6 +31,9 @@ struct AMGXSolver {
     AMGX_config_handle config;
 };
 
+
+
+
 struct Vec3 {
     double u;
     double v;
@@ -43,7 +44,8 @@ enum class LevelConfiguration {
     EMPTY_LEVEL,
     LID_CAVITY,
     STEP,
-    OBSTACLE
+    OBSTACLE,
+    ANALYTICAL,
 };
 
 struct Domain {
@@ -92,7 +94,6 @@ void export_csr_to_file(const CSRMatrix* csr, const std::string& filename);
 
 std::string LevelConfigurationToString(LevelConfiguration config);
 
-void PrintAMGXMatrix(AMGXSolver* AMGX_Handle, int MatSize);
 
 bool WriteToCSV(double value, std::string levelString, std::string gridSize,std::string dataType);
 

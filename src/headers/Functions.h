@@ -149,11 +149,11 @@ inline Vec3 BACKWARDS_FACING_STEP(double x, double y,double z,double t){
     r.w = 0.0;
     double dh = SIMULATION.dh;
     double S = 0.49;
+    double U0 = 2.0;
     //on the top of the step
 
     if(x <= SIMULATION.dh  && (z<=1-SIMULATION.dh/2.0) && z>=SIMULATION.dh/2.0 && y <= (1.0 - SIMULATION.dh/2.0) && y >= SIMULATION.dh/2 && y > S){
-        r.u = -16.0*(pow((y - 1.5*S),2) + 0.25*(pow(z - 0.5,2))) +1.0;//1*(1-pow((4*y - 6*S),2)*(1-pow((2*z - 1),2)));//-4.0*(pow(y-0.5,2) + pow(z-0.5,2)) + 1.0;
-        //r.u = 1.0;
+        r.u = 1.0*U0*(1-pow(4*y - 6*S,2))*(1-pow(2*z-1,2)); //-16.0*(pow((y - 1.5*S),2) + 0.25*(pow(z - 0.5,2))) +1.0;//1*(1-pow((4*y - 6*S),2)*(1-pow((2*z - 1),2)));//-4.0*(pow(y-0.5,2) + pow(z-0.5,2)) + 1.0;
     if(r.u <0){
         r.u = 0.0; //sanity check
     }
@@ -242,6 +242,8 @@ inline int LID_CAVITY_SOLID_MASK(int i,int j,int k){
         return SOLID_CELL;
     }
     else{
+
+
         return FLUID_CELL;
     }
 }
@@ -283,33 +285,19 @@ inline int OBSTACLE_SOLID_MASK(int  i,int j,int k){
     if(pow((j*dh - 0.5),2) +pow((i*dh - 0.5),2)+ pow((k*dh - 0.5),2)  < radius*radius){
         return SOLID_CELL;
     }
-    //cilinder
-    //if(pow((j*dh - 1.0),2) +pow((i*dh - 0.5),2) < radius*radius && (k*dh)>=0.25 && (k*dh)<=0.75){
-    //    return SOLID_CELL;
-    //}
-    //elipse
-    // Rotated ellipse with 3:1 ratio (x:z) rotated by 10 degrees
-    //float center_x = 2.0;
-    //float center_z = 0.5;
-    //float angle = 0 * M_PI / 180.0; // Convert degrees to radians
-    //float cos_angle = cos(angle);
-    //float sin_angle = sin(angle);
-//
-    //// Translate coordinates to origin, rotate, then translate back
-    //float x = j*dh - center_x;
-    //float z = i*dh - center_z;
-    //float x_rot = x * cos_angle - z * sin_angle;
-    //float z_rot = x * sin_angle + z * cos_angle;
-//
-    //// Check ellipse equation (3:1 ratio) and y bounds
-    //if(pow(x_rot/radius, 2) + pow(z_rot/(radius), 2) < 1.0 && 
-    //   (k*dh)>=0.25 && (k*dh)<=0.75){
-    //    return SOLID_CELL;
-    //}
-    //if(pow((j*dh - 0.5),2) +pow((i*dh - 0.5),2)+ pow((k*dh - 0.5),2)  < (dh*1.0)*(dh*1.0)){
-    //    return SOLID_CELL;
-    //}
-    // Default to fluid cell
+
+    return FLUID_CELL;
+
+
+
+}
+
+inline int EMPTY_SOLID_MASK(int  i,int j,int k){
+     // First check for empty cell condition
+     if(j == SIMULATION.Nx-1 && i != 0 && i != SIMULATION.Ny-1 && k != 0 && k != SIMULATION.Nz-1) {
+        return EMPTY_CELL;
+    }
+
     return FLUID_CELL;
 
 
