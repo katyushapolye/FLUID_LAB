@@ -96,6 +96,34 @@ inline double  OBSTACLE_FLOW_PRESSURE(double x, double y,double z,double t){
 
 }
 
+inline int OBSTACLE_SOLID_MASK(int  i,int j,int k){
+     // First check for empty cell condition
+     if(j == SIMULATION.Nx-1 && i != 0 && i != SIMULATION.Ny-1 && k != 0 && k != SIMULATION.Nz-1) {
+        return EMPTY_CELL;
+    }
+    // Then check for inflow condition
+    if(j == 0 && i >= 1 && i < SIMULATION.Ny-1 && k != 0 && k != SIMULATION.Nz-1) {
+        return INFLOW_CELL;
+    }
+    // Finally check for solid boundaries
+    if(i == 0 || j == 0 || k == 0 || i == SIMULATION.Ny-1 || j == SIMULATION.Nx-1 || k == SIMULATION.Nz-1) {
+        return SOLID_CELL;
+    }
+    double dh = SIMULATION.dh;
+    double radius = 0.05;
+   
+
+    if(pow((j*dh - 0.2),2) +pow((i*dh - 0.2),2)+ pow((k*dh - 0.2),2)  < radius*radius){
+        return SOLID_CELL;
+    }
+
+    return FLUID_CELL;
+
+
+
+}
+
+
 
 /*//////////////////////////////////////////////
 ///////////Identity Functions ///////////////
@@ -171,32 +199,7 @@ inline int BACKWARDS_FACING_STEP_SOLID_MASK(int i, int j, int k) {
     return FLUID_CELL;
 }
 
-inline int OBSTACLE_SOLID_MASK(int  i,int j,int k){
-     // First check for empty cell condition
-     if(j == SIMULATION.Nx-1 && i != 0 && i != SIMULATION.Ny-1 && k != 0 && k != SIMULATION.Nz-1) {
-        return EMPTY_CELL;
-    }
-    // Then check for inflow condition
-    if(j == 0 && i >= 1 && i < SIMULATION.Ny-1 && k != 0 && k != SIMULATION.Nz-1) {
-        return INFLOW_CELL;
-    }
-    // Finally check for solid boundaries
-    if(i == 0 || j == 0 || k == 0 || i == SIMULATION.Ny-1 || j == SIMULATION.Nx-1 || k == SIMULATION.Nz-1) {
-        return SOLID_CELL;
-    }
-    double dh = SIMULATION.dh;
-    double radius = 0.25;
-    //finally, check foor the obstacle, which is a r=0.25 sphere centered at 0.5,0.5,0.5
-    //sphere
-    if(pow((j*dh - 0.5),2) +pow((i*dh - 0.5),2)+ pow((k*dh - 0.5),2)  < radius*radius){
-        return SOLID_CELL;
-    }
 
-    return FLUID_CELL;
-
-
-
-}
 
 inline int EMPTY_SOLID_MASK(int  i,int j,int k){
      // First check for empty cell condition

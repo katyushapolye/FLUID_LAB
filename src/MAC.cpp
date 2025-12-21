@@ -480,6 +480,7 @@ void MAC::SetNeumannBorderPressure()
 
 double MAC::GetDivergencyAt(int i, int j, int k)
 {
+    if(this->GetSolid(i,j,k) != FLUID_CELL) return 0;
     double divU = (this->GetU(i, j + 1, k) - this->GetU(i, j, k)) / this->dh;
     double divV = (this->GetV(i + 1, j, k) - this->GetV(i, j, k)) / this->dh;
     double divW = (this->GetW(i, j, k + 1) - this->GetW(i, j, k)) / this->dh;
