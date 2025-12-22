@@ -94,9 +94,8 @@ namespace ConfigReader {
             return;
         }
         DIMENSION = getInt("DIMENSION", 3);
-        
-        if(DIMENSION == 3){
-            SIMULATION.GRID_SOL = new MAC();
+
+        SIMULATION.GRID_SOL = new MAC();
             SIMULATION.GRID_ANT = new MAC();
             SIMULATION.domain = Domain();
             
@@ -121,8 +120,8 @@ namespace ConfigReader {
             
             
             // Initialize grid
-            SIMULATION.GRID_SOL->InitializeGrid(SIMULATION.domain);
-            SIMULATION.GRID_ANT->InitializeGrid(SIMULATION.domain);
+            SIMULATION.GRID_SOL->InitializeGrid(SIMULATION.domain,DIMENSION == 3? false:true);
+            SIMULATION.GRID_ANT->InitializeGrid(SIMULATION.domain,DIMENSION == 3? false:true);
             
             // Return values from initialization
             SIMULATION.dh = (SIMULATION.GRID_ANT->dh);
@@ -146,6 +145,10 @@ namespace ConfigReader {
             else {
                 std::cerr << "Warning: Unknown level type '" << levelType << "'. Using default." << std::endl;
             }
+
+        
+        if(DIMENSION == 3){
+            
 
             // Level geometry, boundary functions.
             if (SIMULATION.level == LevelConfiguration::STEP) {
@@ -171,72 +174,30 @@ namespace ConfigReader {
 
             SIMULATION.GRID_SOL->SetGrid(ZERO,ZERO_SCALAR,0);
             SIMULATION.GRID_ANT->SetGrid(ZERO,ZERO_SCALAR,0);
-    }
-
-    //2D Simulation
-    else{
-
-        SIMULATION2D.GRID_SOL = new MAC2D();
-        SIMULATION2D.GRID_ANT = new MAC2D();
-        SIMULATION2D.domain =    Domain2D();
-
-        SIMULATION2D.domain.x0 = getDouble("DOMAIN_X0", config.domain.x0);
-        SIMULATION2D.domain.xf = getDouble("DOMAIN_XF", config.domain.xf);
-        SIMULATION2D.domain.y0 = getDouble("DOMAIN_Y0", config.domain.y0);
-        SIMULATION2D.domain.yf = getDouble("DOMAIN_YF", config.domain.yf);
-        SIMULATION2D.dt = getDouble("TIME_STEP", config.dt);
-        SIMULATION2D.RE = getDouble("REYNOLDS_NUMBER", config.RE);
-        SIMULATION2D.EPS = getDouble("VISCOSITY", 0.01);
-        SIMULATION2D.GRID_SIZE = getInt("GRID_SIZE", config.GRID_SIZE);
-        SIMULATION2D.TOLERANCE = getDouble("TOLERANCE", config.TOLERANCE);
-        SIMULATION2D.ExportPath = getString("EXPORT_BASE_PATH", "Exports");
-        SIMULATION2D.CHARACTERISTIC_LENGTH = getDouble("CHARACTERISTIC_LENGTH", config.CHARACTERISTIC_LENGTH);
-        SIMULATION2D.MEAN_VELOCITY = getDouble("MEAN_VELOCITY", config.MEAN_VELOCITY);
-
-        SIMULATION2D.NEEDS_COMPATIBILITY_CONDITION = getInt("NEEDS_COMPATIBILITY_CONDITION",config.NEEDS_COMPATIBILITY_CONDITION);
-
-
-        SIMULATION2D.GRID_SOL->InitializeGrid(SIMULATION2D.domain);
-        SIMULATION2D.GRID_ANT->InitializeGrid(SIMULATION2D.domain);
-        
-        SIMULATION2D.dh = (SIMULATION2D.GRID_ANT->dh);
-        SIMULATION2D.Nx = SIMULATION2D.GRID_ANT->Nx;
-        SIMULATION2D.Ny = SIMULATION2D.GRID_ANT->Ny;
-
-         std::string levelType = getString("LEVEL_TYPE", "STEP");
-        if (levelType == "STEP") {
-            SIMULATION2D.level = LevelConfiguration::STEP;
-        } else if (levelType == "CAVITY") {
-            SIMULATION2D.level = LevelConfiguration::LID_CAVITY;
-        } 
-        else if (levelType == "OBSTACLE"){
-            SIMULATION2D.level = LevelConfiguration::OBSTACLE;
-        }
-        else {
-            std::cerr << "Warning: Unknown level type '" << levelType << "'. Using default." << std::endl;
         }
 
-        if (SIMULATION2D.level == LevelConfiguration::STEP) {
-                SIMULATION2D.SolidMaskFunction = BACKWARDS_FACING_STEP_SOLID_MASK_2D;
-                SIMULATION2D.VelocityBoundaryFunction = BACKWARDS_FACING_STEP_2D;
-                SIMULATION2D.PressureBoundaryFunction = BACKWARDS_FACING_STEP_PRESSURE_2D;
+        else{
+
+
+            if (SIMULATION.level == LevelConfiguration::STEP) {
+                    SIMULATION.SolidMaskFunction2D = BACKWARDS_FACING_STEP_SOLID_MASK_2D;
+                    SIMULATION.VelocityBoundaryFunction2D = BACKWARDS_FACING_STEP_2D;
+                    SIMULATION.PressureBoundaryFunction2D = BACKWARDS_FACING_STEP_PRESSURE_2D;
+                }
+            else if(SIMULATION.level == LevelConfiguration::OBSTACLE){
+                    SIMULATION.SolidMaskFunction2D = OBSTACLE_SOLID_MASK_2D;
+                    SIMULATION.VelocityBoundaryFunction2D = OBSTACLE_FLOW_2D;
+                    SIMULATION.PressureBoundaryFunction2D = OBSTACLE_FLOW_PRESSURE_2D;
+
             }
-        else if(SIMULATION2D.level == LevelConfiguration::OBSTACLE){
-                SIMULATION2D.SolidMaskFunction = OBSTACLE_SOLID_MASK_2D;
-                SIMULATION2D.VelocityBoundaryFunction = OBSTACLE_FLOW_2D;
-                SIMULATION2D.PressureBoundaryFunction = OBSTACLE_FLOW_PRESSURE_2D;
+
+            SIMULATION.GRID_SOL->SetLevelGeometry(SIMULATION.SolidMaskFunction2D);
+            SIMULATION.GRID_ANT->SetLevelGeometry(SIMULATION.SolidMaskFunction2D);
+
+            SIMULATION.GRID_SOL->SetGrid(ZERO2D,ZERO2D_SCALAR,0);
+            SIMULATION.GRID_ANT->SetGrid(ZERO2D,ZERO2D_SCALAR,0);
 
         }
-
-        SIMULATION2D.GRID_SOL->SetLevelGeometry(SIMULATION2D.SolidMaskFunction);
-        SIMULATION2D.GRID_ANT->SetLevelGeometry(SIMULATION2D.SolidMaskFunction);
-
-        SIMULATION2D.GRID_SOL->SetGrid(ZERO2D,ZERO2D_SCALAR,0);
-        SIMULATION2D.GRID_ANT->SetGrid(ZERO2D,ZERO2D_SCALAR,0);
-
-
-
-    }
     }
 };
 #endif

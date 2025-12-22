@@ -1,5 +1,5 @@
 
-#include "MAC_2D.h"
+#include "MAC.h"
 #include "Utils.h"
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
@@ -55,15 +55,15 @@ private:
     
 public:
 
-    static void InitializePressureSolver(MAC2D* grid,double dt);
-    static void UpdatePressureMatrix(MAC2D* grid, double dt);
+    static void InitializePressureSolver(MAC* grid,double dt);
+    static void UpdatePressureMatrix(MAC* grid, double dt);
 
     //solves the pressure using the velocity and puts on the grid, debug only, uses eigen to solve on CPU
-    static void SolvePressure_EIGEN(MAC2D* gridAnt);
-    static void SolvePressure_AMGX(MAC2D* gridAnt);
+    static void SolvePressure_EIGEN(MAC* gridAnt);
+    static void SolvePressure_AMGX(MAC* gridAnt);
 
     //takes the pressure on the grid and crrects the velocity
-    static void ProjectPressure(MAC2D* grid);
+    static void ProjectPressure(MAC* grid);
 
     static inline Tensor<double,2> GetPressureMask(int i,int j){ return PRESSURE_MASK[i * ((Nx))  + (j)   ];};
     static inline void SetPressureMask(int i,int j,Tensor<double,2> value){PRESSURE_MASK[i * ((Nx))  + (j)   ] = value;};

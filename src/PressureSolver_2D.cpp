@@ -19,13 +19,13 @@ SparseMatrix PressureSolver2D::PRESSURE_MATRIX_EIGEN;
 
 
 
-void PressureSolver2D::InitializePressureSolver(MAC2D *grid, double dt)
+void PressureSolver2D::InitializePressureSolver(MAC *grid, double dt)
 {
-    PressureSolver2D::Nx = SIMULATION2D.Nx;
-    PressureSolver2D::Ny = SIMULATION2D.Ny;
+    PressureSolver2D::Nx = SIMULATION.Nx;
+    PressureSolver2D::Ny = SIMULATION.Ny;
     PressureSolver2D::PRESSURE_MASK.reserve(grid->GetFluidCellCount());
     PressureSolver2D::dt = dt;
-    double dh = SIMULATION2D.dh;
+    double dh = SIMULATION.dh;
     PressureSolver2D::IDP = VectorXd(Nx * Ny);
     PressureSolver2D::IDP.setConstant(-1);  // FIX 1: Initialize to -1
 
@@ -238,10 +238,10 @@ void PressureSolver2D::InitializePressureSolver(MAC2D *grid, double dt)
     AMGX_solver_setup(AMGX_Handle->solver, AMGX_Handle->AmgxA);
 }
 
-void PressureSolver2D::SolvePressure_EIGEN(MAC2D* grid)
+void PressureSolver2D::SolvePressure_EIGEN(MAC* grid)
 {
 
-    PressureSolver2D::dt = SIMULATION2D.dt;  // FIX: Update dt!
+    PressureSolver2D::dt = SIMULATION.dt;  // FIX: Update dt!
     CPUTimer timer;
     timer.start();
     double dh = grid->dh;
@@ -267,12 +267,12 @@ void PressureSolver2D::SolvePressure_EIGEN(MAC2D* grid)
             {
                 LHS(id) += -(1.0/dt) * 
                     (grid->GetU(i, 1) - 
-                     SIMULATION2D.VelocityBoundaryFunction(dh, i*dh + dh/2.0, 0).u);
+                     SIMULATION.VelocityBoundaryFunction2D(dh, i*dh + dh/2.0, 0).u);
             }
         }
     }
 
-    if (SIMULATION2D.NEEDS_COMPATIBILITY_CONDITION)  // FIX: Use SIMULATION2D
+    if (SIMULATION.NEEDS_COMPATIBILITY_CONDITION)  // FIX: Use SIMULATION
     {
         mean = mean / MatSize;
         for (int i = 0; i < MatSize; i++)
@@ -300,13 +300,13 @@ void PressureSolver2D::SolvePressure_EIGEN(MAC2D* grid)
     }
 
     grid->SetNeumannBorderPressure();
-    SIMULATION2D.lastPressureSolveTime = timer.stop();  // FIX: Use SIMULATION2D
+    SIMULATION.lastPressureSolveTime = timer.stop();  // FIX: Use SIMULATION
 }
 
 
-void PressureSolver2D::SolvePressure_AMGX(MAC2D* grid)
+void PressureSolver2D::SolvePressure_AMGX(MAC* grid)
 {
-    PressureSolver2D::dt = SIMULATION2D.dt;  // FIX: Use SIMULATION2D
+    PressureSolver2D::dt = SIMULATION.dt;  // FIX: Use SIMULATION
     CPUTimer timer;
     timer.start();
     
@@ -333,12 +333,12 @@ void PressureSolver2D::SolvePressure_AMGX(MAC2D* grid)
             {
                 LHS[id] += -(1.0/dt) * 
                     (grid->GetU(i, 1) - 
-                     SIMULATION2D.VelocityBoundaryFunction(dh, i*dh + dh/2.0, 0).u);
+                     SIMULATION.VelocityBoundaryFunction2D(dh, i*dh + dh/2.0, 0).u);
             }
         }
     }
 
-    if (SIMULATION2D.NEEDS_COMPATIBILITY_CONDITION)  
+    if (SIMULATION.NEEDS_COMPATIBILITY_CONDITION)  
     {
         mean = mean / MatSize;
         for (int i = 0; i < MatSize; i++)
@@ -364,7 +364,7 @@ void PressureSolver2D::SolvePressure_AMGX(MAC2D* grid)
     }
 
     grid->SetNeumannBorderPressure();
-    SIMULATION2D.lastPressureSolveTime = timer.stop();  
+    SIMULATION.lastPressureSolveTime = timer.stop();  
 
     free(LHS);
     free(SOL);
@@ -373,7 +373,7 @@ void PressureSolver2D::SolvePressure_AMGX(MAC2D* grid)
 }
 
 
-void PressureSolver2D::ProjectPressure(MAC2D* grid)
+void PressureSolver2D::ProjectPressure(MAC* grid)
 {
     // Project U velocities
     for (int i = 1; i < Ny-1; i++)

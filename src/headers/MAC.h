@@ -15,6 +15,7 @@ using Eigen::VectorXd;
 #define MAC_H
 
 
+//All functions are overloaded to 2D and 3D
 
 class MAC
 {
@@ -42,11 +43,12 @@ public:
 
     Domain omega;
     double dh;
+    bool is2D;
 
     MAC();
 
 
-    void InitializeGrid(Domain omega);
+    void InitializeGrid(Domain omega,bool is2d = false);
 
     void SetLevelGeometry(int(*SolidMaskFunction)(int,int,int));
 
@@ -83,9 +85,6 @@ public:
 
     
 
-
-
-
     //interpolation functions
     //gets thhe value of V at node position u_(i,j,k)
     double getVatU(int i,int j,int k);
@@ -119,6 +118,53 @@ public:
 
     inline double GetSolid(int i,int j, int k){ return this->SOLID_MASK[i * ((this->Nx)*(this->Nz))  + (j*this->Nz)  + k ];};
     inline void SetSolid(int i,int j, int k,int value){this->SOLID_MASK[i * ((this->Nx)*(this->Nz))  + (j*this->Nz)  + k ] = value;};
+
+
+
+    //================== 2D OVERLOADS ===============================
+
+    void InitializeGrid(Domain2D omega);
+
+
+    void SetLevelGeometry(int(*SolidMaskFunction)(int,int));
+
+    void SetGrid( Vec2(*VelocityFunction)(double, double, double) , double (*PressureFunction)(double, double, double),double time );
+
+    void SetBorder(Vec2(*VelocityFunction)(double, double, double) , double (*PressureFunction)(double, double, double),double t);
+
+    
+    double GetDivergencyAt(int i,int j);
+
+    double GetGradPxAt(int i,int j);
+    double GetGradPyAt(int i,int j);
+    double GetGradPzAt(int i,int j);
+
+
+
+    //interpolation functions
+    //gets thhe value of V at node position u_(i,j,k)
+    double getVatU(int i,int j);
+    double getUatV(int i,int j);
+
+
+
+    inline double GetU(int i,int j){ return this->u[i * ((Nx+1))  + (j)   ];};
+    inline void SetU(int i,int j,double value){this->u[i * ((Nx+1))  + (j)  ] = value;}
+
+    inline double GetU_Update_Mask(int i,int j){ return this->U_UPDATE_MASK[i * ((Nx+1))  + (j)   ];};
+    inline void SetU_Update_Mask(int i,int j,int value){this->U_UPDATE_MASK[i * ((Nx+1))  + (j) ] = value;}
+
+    inline double GetV(int i,int j){ return this->v[i * ((Nx))  + (j)   ];};
+    inline void SetV(int i,int j, double value){this->v[i * ((Nx))  + (j)  ] = value;}
+    inline double GetV_Update_Mask(int i,int j){ return this->V_UPDATE_MASK[i * ((Nx))  + (j)   ];};
+    inline void SetV_Update_Mask(int i,int j,int value){this->V_UPDATE_MASK[i * ((Nx))  + (j)   ] = value;}
+
+
+    inline double GetP(int i,int j){ return this->p[i * ((this->Nx))  + (j)  ];};
+    inline void SetP(int i,int j,double value){this->p[i * ((this->Nx))  + (j)  ] = value;};
+
+    inline double GetSolid(int i,int j){ return this->SOLID_MASK[i * ((this->Nx))  + (j)  ];};
+    inline void SetSolid(int i,int j,int value){this->SOLID_MASK(i * ((this->Nx))  + (j)  ) = value;};
 };
 #endif
 

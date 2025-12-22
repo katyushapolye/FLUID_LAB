@@ -38,8 +38,8 @@ VectorXd ADI2D::W_Y_SOL = VectorXd();
 
 
 
-MAC2D ADI2D::X_STEP_SOL = MAC2D();
-MAC2D ADI2D::Y_STEP_SOL = MAC2D();
+MAC ADI2D::X_STEP_SOL = MAC();
+MAC ADI2D::Y_STEP_SOL = MAC();
 
 
 
@@ -58,13 +58,13 @@ double(*ADI2D::PressureFunction)(double, double,double) = nullptr;
 //PARALLEL OPENMP TESTING
 
 
-void ADI2D::SolveADI_X_U_Step_OPENMP(MAC2D* gridAnt, MAC2D* gridSol, MAC2D* velocityField, double time) {
+void ADI2D::SolveADI_X_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
     int Nx = gridAnt->Nx;
     int Ny = gridAnt->Ny;
 
     double dh = ADI2D::dh;
     double dt = ADI2D::dt;
-    double sig = (dt/(dh*dh*2)) * (SIMULATION2D.EPS);
+    double sig = (dt/(dh*dh*2)) * (SIMULATION.EPS);
     double rho = (dt/(4*dh));
 
 
@@ -144,12 +144,12 @@ void ADI2D::SolveADI_X_U_Step_OPENMP(MAC2D* gridAnt, MAC2D* gridSol, MAC2D* velo
         }
     }
 }
-void ADI2D::SolveADI_Y_U_Step_OPENMP(MAC2D* gridAnt, MAC2D* gridSol, MAC2D* velocityField, double time) {
+void ADI2D::SolveADI_Y_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
     int Nx = gridSol->Nx;
     int Ny = gridSol->Ny;
     double dh = ADI2D::dh;
     double dt = ADI2D::dt;
-    double sig = (dt/(dh*dh*2)) * (SIMULATION2D.EPS);
+    double sig = (dt/(dh*dh*2)) * (SIMULATION.EPS);
     double rho = (dt/(4*dh));
     
     #pragma omp parallel
@@ -224,12 +224,12 @@ void ADI2D::SolveADI_Y_U_Step_OPENMP(MAC2D* gridAnt, MAC2D* gridSol, MAC2D* velo
 }
 
 
-void ADI2D::SolveADI_X_V_Step_OPENMP(MAC2D* gridAnt, MAC2D* gridSol, MAC2D* velocityField, double time) {
+void ADI2D::SolveADI_X_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
     int Nx = gridSol->Nx;
     int Ny = gridSol->Ny;
     double dh = ADI2D::dh;
     double dt = ADI2D::dt;
-    double sig = (dt/(dh*dh*2)) * (SIMULATION2D.EPS);
+    double sig = (dt/(dh*dh*2)) * (SIMULATION.EPS);
     double rho = (dt/(4*dh));
 
     #pragma omp parallel
@@ -299,12 +299,12 @@ void ADI2D::SolveADI_X_V_Step_OPENMP(MAC2D* gridAnt, MAC2D* gridSol, MAC2D* velo
         }
     }
 }
-void ADI2D::SolveADI_Y_V_Step_OPENMP(MAC2D* gridAnt, MAC2D* gridSol, MAC2D* velocityField, double time) {
+void ADI2D::SolveADI_Y_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
     int Nx = gridSol->Nx;
     int Ny = gridSol->Ny;
     double dh = ADI2D::dh;
     double dt = ADI2D::dt;
-    double sig = (dt/(dh*dh*2)) * (SIMULATION2D.EPS);
+    double sig = (dt/(dh*dh*2)) * (SIMULATION.EPS);
     double rho = (dt/(4*dh));
 
     #pragma omp parallel
@@ -388,7 +388,7 @@ void ADI2D::SolveADI_Y_V_Step_OPENMP(MAC2D* gridAnt, MAC2D* gridSol, MAC2D* velo
 
 
 
-void ADI2D::InitializeADI2D(MAC2D* grid,double dt,Vec2(*VelocityBorderFunction)(double, double, double),Vec2(*VelocityFont)(double, double,double),double(*PressureFunction)(double, double, double)){
+void ADI2D::InitializeADI2D(MAC* grid,double dt,Vec2(*VelocityBorderFunction)(double, double, double),Vec2(*VelocityFont)(double, double,double),double(*PressureFunction)(double, double, double)){
     int Nx = grid->Nx;
     int Ny = grid->Ny;
 
@@ -402,7 +402,7 @@ void ADI2D::InitializeADI2D(MAC2D* grid,double dt,Vec2(*VelocityBorderFunction)(
     ADI2D::dh = grid->dh;
     
     //sigma coefficient
-    ADI2D::SIG = (dt/(dh*dh*2.0))* (SIMULATION2D.EPS);
+    ADI2D::SIG = (dt/(dh*dh*2.0))* (SIMULATION.EPS);
 
 
     
@@ -495,8 +495,8 @@ void ADI2D::InitializeADI2D(MAC2D* grid,double dt,Vec2(*VelocityBorderFunction)(
 
 
 
-    ADI2D::X_STEP_SOL.InitializeGrid(grid->omega);
-    ADI2D::Y_STEP_SOL.InitializeGrid(grid->omega);
+    ADI2D::X_STEP_SOL.InitializeGrid(grid->omega,true);
+    ADI2D::Y_STEP_SOL.InitializeGrid(grid->omega,true);
 
 
     ADI2D::X_STEP_SOL.CopyGrid(*grid);
@@ -508,8 +508,8 @@ void ADI2D::InitializeADI2D(MAC2D* grid,double dt,Vec2(*VelocityBorderFunction)(
 }
 
 //IM BREAKING the component on the exit
-void ADI2D::SolveADIStep(MAC2D* gridAnt,MAC2D* gridSol,double time){
-    ADI2D::dt = SIMULATION2D.dt;
+void ADI2D::SolveADIStep(MAC* gridAnt,MAC* gridSol,double time){
+    ADI2D::dt = SIMULATION.dt;
 
 
     double start = omp_get_wtime();
@@ -518,7 +518,7 @@ void ADI2D::SolveADIStep(MAC2D* gridAnt,MAC2D* gridSol,double time){
  
     time += ADI2D::dt/2.0;
     ADI2D::X_STEP_SOL.SetBorder(ADI2D::VelocityBorderFunction,ADI2D::PressureFunction,time);
-    if(SIMULATION2D.level == LevelConfiguration::STEP || SIMULATION2D.level == LevelConfiguration::OBSTACLE ||  SIMULATION2D.level == LevelConfiguration::PIPE) ADI2D::X_STEP_SOL.SetNeumannBorder();
+    if(SIMULATION.level == LevelConfiguration::STEP || SIMULATION.level == LevelConfiguration::OBSTACLE ||  SIMULATION.level == LevelConfiguration::PIPE) ADI2D::X_STEP_SOL.SetNeumannBorder();
     SolveADI_X_U_Step_OPENMP(gridAnt,&X_STEP_SOL,gridAnt,time);
     SolveADI_X_V_Step_OPENMP(gridAnt,&X_STEP_SOL,gridAnt,time);
 
@@ -526,14 +526,14 @@ void ADI2D::SolveADIStep(MAC2D* gridAnt,MAC2D* gridSol,double time){
 
     time += ADI2D::dt/2.0;
     ADI2D::Y_STEP_SOL.SetBorder(ADI2D::VelocityBorderFunction,ADI2D::PressureFunction,time);
-    if(SIMULATION2D.level == LevelConfiguration::STEP || SIMULATION2D.level == LevelConfiguration::OBSTACLE ||  SIMULATION2D.level == LevelConfiguration::PIPE) ADI2D::Y_STEP_SOL.SetNeumannBorder();
+    if(SIMULATION.level == LevelConfiguration::STEP || SIMULATION.level == LevelConfiguration::OBSTACLE ||  SIMULATION.level == LevelConfiguration::PIPE) ADI2D::Y_STEP_SOL.SetNeumannBorder();
     SolveADI_Y_U_Step_OPENMP(&X_STEP_SOL,&Y_STEP_SOL,gridAnt,time);
     SolveADI_Y_V_Step_OPENMP(&X_STEP_SOL,&Y_STEP_SOL,gridAnt,time);
 
 
     double end = omp_get_wtime();
 
-    SIMULATION2D.lastADISolveTime = end - start;
+    SIMULATION.lastADISolveTime = end - start;
 
     //WriteToCSV("Data/Times/time_adi2D_16.csv",end-start);
 

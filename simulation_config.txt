@@ -1,7 +1,7 @@
 # Simulation Configuration File - Prefereably, all units are in SI as far as I know
 
 
-DIMENSION = 3
+DIMENSION = 2
 
 LEVEL_TYPE = OBSTACLE
 
@@ -17,7 +17,7 @@ DOMAIN_ZF = 0.41
 TIME_STEP =  0.002   
 VISCOSITY = 0.001
 EPS_COEFICIENT = 0.1 #Used in reynolds calculation
-GRID_SIZE = 64
+GRID_SIZE = 32
 TOLERANCE = 10E-18
 NEEDS_COMPATIBILITY_CONDITION = 0
 

@@ -2,7 +2,7 @@
 #define GRID_VISUALIZER_H
 
 #include "MAC.h"
-#include "MAC_2D.h"
+
 #include <imgui.h>
 #include <implot.h>
 #include <implot3d.h>
@@ -16,7 +16,7 @@ extern int DIMENSION;
 class GridVisualizer {
 private:
     MAC* grid3D;
-    MAC2D* grid2D;
+    MAC* grid2D;
     
     // UI state
     int selectedComponent = 1;  // 0=velocity, 1=u, 2=v, 3=w (3D only), 4=p, 5=solid, 6=divergence, 7=magnitude
@@ -75,39 +75,48 @@ private:
 
 public:
     GridVisualizer(MAC* gridPtr);
-    GridVisualizer(MAC2D* gridPtr);
     ~GridVisualizer();
     
     void Render();
     void UpdateGrid(MAC* newGrid);
-    void UpdateGrid(MAC2D* newGrid);
+
 };
 
 // Implementation
 GridVisualizer::GridVisualizer(MAC* gridPtr) : grid3D(gridPtr), grid2D(nullptr) {
-    if (grid3D) {
-        sliceIndex = grid3D->Ny / 2; // Start at middle slice
+    if(gridPtr->is2D){
+
+        sliceIndex = 0; // No slicing needed for 2D
+        dh = gridPtr->dh;
     }
-    dh = grid3D->dh;
+    else{
+
+    
+
+        sliceIndex = grid3D->Ny / 2; // Start at middle slice
+    
+        dh = grid3D->dh;
+    }
 }
 
-GridVisualizer::GridVisualizer(MAC2D* gridPtr) : grid3D(nullptr), grid2D(gridPtr) {
-    sliceIndex = 0; // No slicing needed for 2D
-        dh = grid2D->dh;
 
-}
 
 GridVisualizer::~GridVisualizer() {}
 
 void GridVisualizer::UpdateGrid(MAC* newGrid) {
-    grid3D = newGrid;
-    grid2D = nullptr;
-}
 
-void GridVisualizer::UpdateGrid(MAC2D* newGrid) {
+    if(newGrid->is2D){
     grid2D = newGrid;
     grid3D = nullptr;
+    }
+    else{
+
+    
+    grid3D = newGrid;
+    grid2D = nullptr;
+    }
 }
+
 
 void GridVisualizer::ComputeMinMax() {
 

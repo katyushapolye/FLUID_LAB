@@ -1,7 +1,7 @@
 #ifndef ADI2D_H
 #define ADI2D_H
 
-#include "MAC_2D.h"
+#include "MAC.h"
 #include "Utils.h"
 #include "Functions.h"
 #include "Definitions.h"
@@ -57,8 +57,8 @@ private:
     static VectorXd W_Y_SOL;
 
 
-    static MAC2D X_STEP_SOL;
-    static MAC2D Y_STEP_SOL;
+    static MAC X_STEP_SOL;
+    static MAC Y_STEP_SOL;
 
 
 
@@ -77,18 +77,18 @@ private:
 
 
 //OPENMP functions
-    static void SolveADI_X_U_Step_OPENMP(MAC2D* gridAnt,MAC2D* gridSol,MAC2D* velocityField,double time);
-    static void SolveADI_Y_U_Step_OPENMP(MAC2D* gridAnt,MAC2D* gridSol,MAC2D* velocityField,double time);
+    static void SolveADI_X_U_Step_OPENMP(MAC* gridAnt,MAC* gridSol,MAC* velocityField,double time);
+    static void SolveADI_Y_U_Step_OPENMP(MAC* gridAnt,MAC* gridSol,MAC* velocityField,double time);
 
-    static void SolveADI_X_V_Step_OPENMP(MAC2D* gridAnt,MAC2D* gridSol,MAC2D* velocityField,double time);
-    static void SolveADI_Y_V_Step_OPENMP(MAC2D* gridAnt,MAC2D* gridSol,MAC2D* velocityField,double time);
+    static void SolveADI_X_V_Step_OPENMP(MAC* gridAnt,MAC* gridSol,MAC* velocityField,double time);
+    static void SolveADI_Y_V_Step_OPENMP(MAC* gridAnt,MAC* gridSol,MAC* velocityField,double time);
 
 
 
 
 public:
-    static void InitializeADI2D(MAC2D* grid,double dt,Vec2(*VelocityBorderFunction)(double, double, double),Vec2(*VelocityFont)(double, double, double),double(*PressureFunction)(double, double, double));
-    static void SolveADIStep(MAC2D* gridAnt,MAC2D* gridSol,double time);
+    static void InitializeADI2D(MAC* grid,double dt,Vec2(*VelocityBorderFunction)(double, double, double),Vec2(*VelocityFont)(double, double, double),double(*PressureFunction)(double, double, double));
+    static void SolveADIStep(MAC* gridAnt,MAC* gridSol,double time);
 
 };
 #endif

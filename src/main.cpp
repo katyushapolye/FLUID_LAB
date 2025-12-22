@@ -5,7 +5,6 @@
 
 #include "headers/MAC.h"
 #include "headers/ADI.h"
-#include "headers/MAC_2D.h"
 #include "headers/ADI_2D.h"
 #include "headers/PressureSolver.h"
 #include "headers/PressureSolver_2D.h"
@@ -37,20 +36,19 @@ void HandleExports(int IT, int frame);
 
 
 //what to do
+//continue this, we now only haave on simulation and one mac, so it should make it simpler
+//tomorrow, add 3 morre configs with the creation of the simulation manager
+//solver (ADI,FLIP)
+//GPU ACCELERATED
 //tidy tthis main, have 2 more files
 //simulation manager that abstract the step with function pointers
 //visualization manaage, that handles all the UI stuff (mege grid visualizer into it)
 
 int main(int argc, char *argv[])
 {
-    // Initialize simulation
-    if(argc == 2){
-        std::string inputFile(argv[1]);
-        InitializeSimulation(inputFile);
-    }
-    else{
-        InitializeSimulation();
-    }
+
+    InitializeSimulation();
+    
 
     InitializeTelemetryExport();
     
@@ -110,7 +108,7 @@ int main(int argc, char *argv[])
     if(DIMENSION == 3) {
         visualizer = new GridVisualizer(SIMULATION.GRID_SOL);
     } else if(DIMENSION == 2) {
-        visualizer = new GridVisualizer(SIMULATION2D.GRID_SOL);
+        visualizer = new GridVisualizer(SIMULATION.GRID_SOL);
     }
     
     // Simulation variables
@@ -120,7 +118,7 @@ int main(int argc, char *argv[])
     double tF = 100000.0;
     
     // Use correct dt based on dimension
-    double dt = (DIMENSION == 3) ? SIMULATION.dt : SIMULATION2D.dt;
+    double dt = (DIMENSION == 3) ? SIMULATION.dt : SIMULATION.dt;
     int F_IT = tF / dt;
     
     double startTotal = 0.0, endTotal = 0.0;
@@ -131,8 +129,8 @@ int main(int argc, char *argv[])
 
     //this shos the initial conditions andd solid mask
     if(DIMENSION == 2) {
-        SIMULATION2D.GRID_ANT->SetBorder(SIMULATION2D.VelocityBoundaryFunction,SIMULATION2D.PressureBoundaryFunction,0);
-        visualizer->UpdateGrid(SIMULATION2D.GRID_ANT);
+        SIMULATION.GRID_ANT->SetBorder(SIMULATION.VelocityBoundaryFunction2D,SIMULATION.PressureBoundaryFunction2D,0);
+        visualizer->UpdateGrid(SIMULATION.GRID_ANT);
     }
     else{
         SIMULATION.GRID_ANT->SetBorder(SIMULATION.VelocityBoundaryFunction,SIMULATION.PressureBoundaryFunction,0);
@@ -201,51 +199,39 @@ int main(int argc, char *argv[])
 
 void InitializeSimulation(const std::string& configFile) {
     ConfigReader::loadConfig(SIMULATION, configFile);
+
+    SIMULATION.GRID_ANT->ExportGrid(0);
+    TELEMETRY.Push(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,0.0);
+    
+    std::cout << "3D MAC Grid initialized - Parameters\n"
+              << "-dt = " << std::to_string(SIMULATION.dt) << "\n"
+              << "-dh = " << std::to_string(SIMULATION.dh) 
+              << "\n-Nx = " << std::to_string(SIMULATION.Nx) 
+              << "\n-Ny = " << std::to_string(SIMULATION.Ny)
+              << "\n-Nz = " << std::to_string(SIMULATION.Nz) << std::endl;
+    std::cout << "Total node count: " 
+              << (SIMULATION.Nx * SIMULATION.Ny * (SIMULATION.Nz+1)) * 3 
+              << " - Re = " << SIMULATION.RE 
+              << " - Grid size: " << SIMULATION.GRID_SIZE 
+              << " - Tolerance: " << SIMULATION.TOLERANCE << std::endl;
     
     if(DIMENSION == 3){
-        SIMULATION.GRID_ANT->ExportGrid(0);
-        TELEMETRY.Push(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-        
-        std::cout << "3D MAC Grid initialized - Parameters\n"
-                  << "-dt = " << std::to_string(SIMULATION.dt) << "\n"
-                  << "-dh = " << std::to_string(SIMULATION.dh) 
-                  << "\n-Nx = " << std::to_string(SIMULATION.Nx) 
-                  << "\n-Ny = " << std::to_string(SIMULATION.Ny)
-                  << "\n-Nz = " << std::to_string(SIMULATION.Nz) << std::endl;
-        std::cout << "Total node count: " 
-                  << (SIMULATION.Nx * SIMULATION.Ny * SIMULATION.Nz) * 3 
-                  << " - Re = " << SIMULATION.RE 
-                  << " - Grid size: " << SIMULATION.GRID_SIZE 
-                  << " - Tolerance: " << SIMULATION.TOLERANCE << std::endl;
-        
         ADI::InitializeADI(SIMULATION.GRID_SOL, SIMULATION.dt, 
                           SIMULATION.VelocityBoundaryFunction, ZERO, 
                           SIMULATION.PressureBoundaryFunction);
         PressureSolver::InitializePressureSolver(SIMULATION.GRID_SOL, SIMULATION.dt);
     }
     else if(DIMENSION == 2){
-        SIMULATION2D.GRID_ANT->ExportGrid(0);
-        TELEMETRY.Push(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
         
-        std::cout << "2D MAC Grid initialized - Parameters\n"
-                  << "-dt = " << std::to_string(SIMULATION2D.dt) << "\n"
-                  << "-dh = " << std::to_string(SIMULATION2D.dh) 
-                  << "\n-Nx = " << std::to_string(SIMULATION2D.Nx) 
-                  << "\n-Ny = " << std::to_string(SIMULATION2D.Ny) << "\n";
-        std::cout << "Total node count: " 
-                  << (SIMULATION2D.Nx * SIMULATION2D.Ny) * 2
-                  << " - Re = " << SIMULATION2D.RE 
-                  << " - Grid size: " << SIMULATION2D.GRID_SIZE 
-                  << " - Tolerance: " << SIMULATION2D.TOLERANCE << std::endl;
         
-        ADI2D::InitializeADI2D(SIMULATION2D.GRID_SOL, SIMULATION2D.dt, 
-                               SIMULATION2D.VelocityBoundaryFunction, ZERO2D, 
-                               SIMULATION2D.PressureBoundaryFunction);
-
-        PressureSolver2D::InitializePressureSolver(SIMULATION2D.GRID_SOL, SIMULATION2D.dt);
+        ADI2D::InitializeADI2D(SIMULATION.GRID_SOL, SIMULATION.dt, 
+                               SIMULATION.VelocityBoundaryFunction2D, ZERO2D, 
+                               SIMULATION.PressureBoundaryFunction2D);
+        PressureSolver2D::InitializePressureSolver(SIMULATION.GRID_SOL, SIMULATION.dt);
     }
 }
 
+//we will carrtu this function and inittilize to  manager, so it will handle the 3d/2d cases properly and with functions pointers
 void SimulationStep(int& IT, int& frame, double& time, double& b4Project, bool& simulationRunning, GridVisualizer* visualizer) {
     if(DIMENSION == 3){
         // Diffusion + Convection
@@ -289,49 +275,49 @@ void SimulationStep(int& IT, int& frame, double& time, double& b4Project, bool& 
     }
     else if(DIMENSION == 2){
         // Diffusion + Convection
-        ADI2D::SolveADIStep(SIMULATION2D.GRID_ANT, SIMULATION2D.GRID_SOL, time);
+        ADI2D::SolveADIStep(SIMULATION.GRID_ANT, SIMULATION.GRID_SOL, time);
         
         // Pressure Projection
-        if(SIMULATION2D.level == LevelConfiguration::STEP || 
-           SIMULATION2D.level == LevelConfiguration::OBSTACLE) {
-            SIMULATION2D.GRID_SOL->SetNeumannBorder();
+        if(SIMULATION.level == LevelConfiguration::STEP || 
+           SIMULATION.level == LevelConfiguration::OBSTACLE) {
+            SIMULATION.GRID_SOL->SetNeumannBorder();
         }
 
 
-        PressureSolver2D::SolvePressure_AMGX(SIMULATION2D.GRID_SOL);
-        b4Project = SIMULATION2D.GRID_SOL->GetDivSum();
-        PressureSolver2D::ProjectPressure(SIMULATION2D.GRID_SOL);
+        PressureSolver2D::SolvePressure_AMGX(SIMULATION.GRID_SOL);
+        b4Project = SIMULATION.GRID_SOL->GetDivSum();
+        PressureSolver2D::ProjectPressure(SIMULATION.GRID_SOL);
 
-        time += SIMULATION2D.dt;
+        time += SIMULATION.dt;
 
         double startTotal = GetWallTime();
         double endTotal = startTotal;
-        int F_IT = 100000.0 / SIMULATION2D.dt;
+        int F_IT = 100000.0 / SIMULATION.dt;
 
         UpdateTelemetry(IT, F_IT, endTotal, startTotal, b4Project, frame, time);
 
 
-        if (IT > 10 && SIMULATION2D.GRID_ANT->MaxAbsoluteDifference(*SIMULATION2D.GRID_SOL) < SIMULATION2D.TOLERANCE) {
-            if(SIMULATION2D.level == LevelConfiguration::STEP || 
-               SIMULATION2D.level == LevelConfiguration::OBSTACLE) {
-                SIMULATION2D.GRID_SOL->SetNeumannBorder();
+        if (IT > 10 && SIMULATION.GRID_ANT->MaxAbsoluteDifference(*SIMULATION.GRID_SOL) < SIMULATION.TOLERANCE) {
+            if(SIMULATION.level == LevelConfiguration::STEP || 
+               SIMULATION.level == LevelConfiguration::OBSTACLE) {
+                SIMULATION.GRID_SOL->SetNeumannBorder();
             }
-            SIMULATION2D.GRID_SOL->ExportGrid(frame);
+            SIMULATION.GRID_SOL->ExportGrid(frame);
             frame++;
             simulationRunning = false; 
         }
 
-        SIMULATION2D.GRID_ANT->CopyGrid(*SIMULATION2D.GRID_SOL);
+        SIMULATION.GRID_ANT->CopyGrid(*SIMULATION.GRID_SOL);
         IT++;
 
         // Update visualizer with new grid data (2D version)
         if(visualizer != nullptr) {
-            visualizer->UpdateGrid(SIMULATION2D.GRID_SOL);
+            visualizer->UpdateGrid(SIMULATION.GRID_SOL);
         }
 
     }
 
-    if(SIMULATION2D.level == LevelConfiguration::OBSTACLE || SIMULATION.level == LevelConfiguration::OBSTACLE){
+    if(SIMULATION.level == LevelConfiguration::OBSTACLE || SIMULATION.level == LevelConfiguration::OBSTACLE){
             CalculateAerodynamicsCoeficients(time);
     }
     HandleExports(IT, frame);
@@ -347,7 +333,7 @@ void RenderUI(int IT, int F_IT, double time, double tF, double frameTime, bool& 
     if(DIMENSION == 3) {
         ImGui::Text("Divergence: %.6e", SIMULATION.GRID_SOL->GetDivSum());
     } else if(DIMENSION == 2) {
-        ImGui::Text("Divergence: %.6e", SIMULATION2D.GRID_SOL->GetDivSum());
+        ImGui::Text("Divergence: %.6e", SIMULATION.GRID_SOL->GetDivSum());
     }
     
     ImGui::Text("Frame Time: %.8f ms", frameTime * 1000.0);
@@ -417,8 +403,10 @@ void DrawSimulationPlots()
             ImGuiCond_Always
         );
 
-        ImPlot::PlotLine("CFL",
-            TELEMETRY.time.data(), TELEMETRY.cfl.data(), TELEMETRY.time.size());
+        ImPlot::PlotLine("Adv. CFL",
+            TELEMETRY.time.data(), TELEMETRY.advcfl.data(), TELEMETRY.time.size());
+        ImPlot::PlotLine("Diff. CFL",
+            TELEMETRY.time.data(), TELEMETRY.diffcfl.data(), TELEMETRY.time.size());
         double x = 1.0;
         ImPlot::PlotInfLines("CFL = 1", &x, 0,1);
         ImPlot::EndPlot();
@@ -740,31 +728,36 @@ void DrawAerodynamicsTelemetry() {
 
 void UpdateTelemetry(int IT,int F_IT,double endTotal,double startTotal,double b4ProjectDiv,int &frame,float simTime){
     if(DIMENSION == 3){
-        double cfl = (SIMULATION.GRID_SOL->GetMaxVelocity() / SIMULATION.dh) * SIMULATION.dt;
+        double advcfl = (SIMULATION.GRID_SOL->GetMaxVelocity() / SIMULATION.dh) * SIMULATION.dt;
+        double diffcfl = (SIMULATION.EPS* SIMULATION.dt) / (SIMULATION.dh*SIMULATION.dh);
         double residual = SIMULATION.GRID_ANT->MaxAbsoluteDifference(*SIMULATION.GRID_SOL);
 
         TELEMETRY.Push(
             simTime, 
             SIMULATION.GRID_SOL->GetDivSum(),
             b4ProjectDiv,
-            cfl,
+            advcfl,
+            diffcfl,
             residual,
             SIMULATION.lastADISolveTime,
             SIMULATION.lastPressureSolveTime
         );
     }
     else if(DIMENSION == 2){
-        double cfl = (SIMULATION2D.GRID_SOL->GetMaxVelocity() / SIMULATION2D.dh) * SIMULATION2D.dt;
-        double residual = SIMULATION2D.GRID_ANT->MaxAbsoluteDifference(*SIMULATION2D.GRID_SOL);
+        double advcfl = (SIMULATION.GRID_SOL->GetMaxVelocity() / SIMULATION.dh) * SIMULATION.dt;
+
+        double diffcfl = (SIMULATION.EPS* SIMULATION.dt) / (SIMULATION.dh*SIMULATION.dh);
+        double residual = SIMULATION.GRID_ANT->MaxAbsoluteDifference(*SIMULATION.GRID_SOL);
 
         TELEMETRY.Push(
             simTime, 
-            SIMULATION2D.GRID_SOL->GetDivSum(),
+            SIMULATION.GRID_SOL->GetDivSum(),
             b4ProjectDiv,
-            cfl,
+            advcfl,
+            diffcfl,
             residual,
-            SIMULATION2D.lastADISolveTime,
-            SIMULATION2D.lastPressureSolveTime
+            SIMULATION.lastADISolveTime,
+            SIMULATION.lastPressureSolveTime
         );
     }
 
@@ -779,16 +772,16 @@ void CalculateAerodynamicsCoeficients(float simTime) {
     /*pressure drop*/
     AERODYNAMICS.time.push_back(simTime);
     //make the points coordinate be selectable with imgui
-    //there is informtion about the max range on SIMULATION2D.Nx and SIMULATION2D.Nx
+    //there is informtion about the max range on SIMULATION.Nx and SIMULATION.Nx
 
-    int maxX = SIMULATION2D.Nx;
-    int maxY = SIMULATION2D.Ny;
-    float dh = SIMULATION2D.dh; // Get the grid spacing
+    int maxX = SIMULATION.Nx;
+    int maxY = SIMULATION.Ny;
+    float dh = SIMULATION.dh; // Get the grid spacing
 
-    static int x1 = SIMULATION2D.Nx / 2;
-    static int y1 = SIMULATION2D.Ny / 2;
-    static int x2 = SIMULATION2D.Nx / 2 + 1;
-    static int y2 = SIMULATION2D.Ny / 2;
+    static int x1 = SIMULATION.Nx / 2;
+    static int y1 = SIMULATION.Ny / 2;
+    static int x2 = SIMULATION.Nx / 2 + 1;
+    static int y2 = SIMULATION.Ny / 2;
 
     ImGui::Begin("Pressure Difference");
 
@@ -808,8 +801,8 @@ void CalculateAerodynamicsCoeficients(float simTime) {
     ImGui::SameLine(); ImGui::Text("= %.3f", y2 * dh);
 
     // Compute difference (stays the same)
-    double p1 = SIMULATION2D.GRID_SOL->GetP(y1, x1);
-    double p2 = SIMULATION2D.GRID_SOL->GetP(y2, x2);
+    double p1 = SIMULATION.GRID_SOL->GetP(y1, x1);
+    double p2 = SIMULATION.GRID_SOL->GetP(y2, x2);
     double pdif = p1 - p2;
 
     // Display with physical positions
@@ -822,8 +815,8 @@ void CalculateAerodynamicsCoeficients(float simTime) {
 
 
 
-    double mi = SIMULATION2D.EPS; // kinematic viscosity
-    MAC2D* grid = SIMULATION2D.GRID_SOL;
+    double mi = SIMULATION.EPS; // kinematic viscosity
+    MAC* grid = SIMULATION.GRID_SOL;
 
     double dudx = 0.0;
     double dudy = 0.0;
@@ -834,8 +827,8 @@ void CalculateAerodynamicsCoeficients(float simTime) {
     double Fl = 0.0;
     
     // For all non-boundary cell centers
-    for(int i = 1; i < SIMULATION2D.Ny-1; i++) {
-        for(int j = 1; j < SIMULATION2D.Nx-1; j++) {
+    for(int i = 1; i < SIMULATION.Ny-1; i++) {
+        for(int j = 1; j < SIMULATION.Nx-1; j++) {
             // Skip cells that are not solid
             if(grid->GetSolid(i,j) != SOLID_CELL) {
                 continue;
@@ -1134,10 +1127,10 @@ void InitializeTelemetryExport() {
             std::to_string(SIMULATION.GRID_SIZE) + "_3D" + "_re" +
             std::to_string(int(SIMULATION.RE)) + "/";
     } else {
-        levelStr = LevelConfigurationToString(SIMULATION2D.level);
+        levelStr = LevelConfigurationToString(SIMULATION.level);
         exportPath = exportBasePath + "/" + levelStr + "/" +
-            std::to_string(SIMULATION2D.GRID_SIZE) + "_2D" + "_re" +
-            std::to_string(int(SIMULATION2D.RE)) + "/";
+            std::to_string(SIMULATION.GRID_SIZE) + "_2D" + "_re" +
+            std::to_string(int(SIMULATION.RE)) + "/";
     }
     
     std::filesystem::create_directories(exportPath);
@@ -1160,7 +1153,7 @@ void InitializeTelemetryExport() {
     if (EXPORT_SETTINGS.exportDivSumBeforeProj) 
         EXPORT_SETTINGS.telemetryFile << ",div_sum_before_proj";
     if (EXPORT_SETTINGS.exportCFL) 
-        EXPORT_SETTINGS.telemetryFile << ",cfl";
+        EXPORT_SETTINGS.telemetryFile << ",advcfl,diffcfl";
     if (EXPORT_SETTINGS.exportResidual) 
         EXPORT_SETTINGS.telemetryFile << ",residual";
     if (EXPORT_SETTINGS.exportCPUTime) 
@@ -1169,7 +1162,7 @@ void InitializeTelemetryExport() {
         EXPORT_SETTINGS.telemetryFile << ",gpu_time";
     
     // Aerodynamics headers (only for 2D with obstacle)
-    if (DIMENSION == 2 && SIMULATION2D.level == LevelConfiguration::OBSTACLE) {
+    if (DIMENSION == 2 && SIMULATION.level == LevelConfiguration::OBSTACLE) {
         if (EXPORT_SETTINGS.exportCl) 
             EXPORT_SETTINGS.telemetryFile << ",cl";
         if (EXPORT_SETTINGS.exportCd) 
@@ -1213,8 +1206,10 @@ void ExportTelemetryData(int iteration) {
     }
     
     if (EXPORT_SETTINGS.exportCFL) {
-        if (!TELEMETRY.cfl.empty())
-            EXPORT_SETTINGS.telemetryFile << "," << TELEMETRY.cfl.back();
+        if (!TELEMETRY.advcfl.empty()){
+            EXPORT_SETTINGS.telemetryFile << "," << TELEMETRY.advcfl.back();
+            EXPORT_SETTINGS.telemetryFile << "," << TELEMETRY.diffcfl.back();
+        }
         else
             EXPORT_SETTINGS.telemetryFile << ",0.0";
     }
@@ -1241,7 +1236,7 @@ void ExportTelemetryData(int iteration) {
     }
     
     // Export aerodynamics telemetry (only for 2D with obstacle)
-    if ( SIMULATION.level == LevelConfiguration::OBSTACLE || SIMULATION2D.level == LevelConfiguration::OBSTACLE) {
+    if ( SIMULATION.level == LevelConfiguration::OBSTACLE || SIMULATION.level == LevelConfiguration::OBSTACLE) {
         if (EXPORT_SETTINGS.exportCl) {
             if (!AERODYNAMICS.Cl.empty())
                 EXPORT_SETTINGS.telemetryFile << "," << AERODYNAMICS.Cl.back();
@@ -1308,7 +1303,7 @@ void RenderExportUI() {
         ImGui::Checkbox("GPU Time (Pressure)", &EXPORT_SETTINGS.exportGPUTime);
         
         // Show aerodynamics options only for 2D with obstacle
-        if ( SIMULATION.level == LevelConfiguration::OBSTACLE || SIMULATION2D.level == LevelConfiguration::OBSTACLE )  {
+        if ( SIMULATION.level == LevelConfiguration::OBSTACLE || SIMULATION.level == LevelConfiguration::OBSTACLE )  {
             ImGui::Separator();
             ImGui::Text("Aerodynamics Telemetry");
             ImGui::Checkbox("Lift Coefficient (Cl)", &EXPORT_SETTINGS.exportCl);
@@ -1348,7 +1343,7 @@ void HandleExports(int IT, int frame) {
         if (DIMENSION == 3) {
             SIMULATION.GRID_SOL->ExportGrid(EXPORT_SETTINGS.gridExportCounter);
         } else if (DIMENSION == 2) {
-            SIMULATION2D.GRID_SOL->ExportGrid(EXPORT_SETTINGS.gridExportCounter);
+            SIMULATION.GRID_SOL->ExportGrid(EXPORT_SETTINGS.gridExportCounter);
         }
         EXPORT_SETTINGS.lastExportedGridFrame = IT;
         EXPORT_SETTINGS.gridExportCounter++;

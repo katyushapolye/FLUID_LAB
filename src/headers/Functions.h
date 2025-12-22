@@ -165,11 +165,11 @@ inline Vec2 BACKWARDS_FACING_STEP_2D(double x, double y,double t){
     Vec2 r;
     r.u = 0.0;
     r.v = 0.0;
-    double dh = SIMULATION2D.dh;
+    double dh = SIMULATION.dh;
     double S = 0.49;
     //on the top of the step
 
-    if(x <= SIMULATION2D.dh  && y <= (1.0 - SIMULATION2D.dh/2.0) && y >= SIMULATION2D.dh/2 && y > S){
+    if(x <= SIMULATION.dh  && y <= (1.0 - SIMULATION.dh/2.0) && y >= SIMULATION.dh/2 && y > S){
         r.u = -16.0*(pow((y - 1.5*S),2)) +1.0;//1*(1-pow((4*y - 6*S),2)*(1-pow((2*z - 1),2)));//-4.0*(pow(y-0.5,2) + pow(z-0.5,2)) + 1.0;
         //r.u = 1.0;
     if(r.u <0){
@@ -193,15 +193,15 @@ inline double  BACKWARDS_FACING_STEP_PRESSURE_2D(double x, double y,double t){
 
 inline int BACKWARDS_FACING_STEP_SOLID_MASK_2D(int i, int j) {
     // First check for empty cell condition
-    if(j == SIMULATION2D.Nx-1 && i != 0 && i != SIMULATION2D.Ny-1 ) {
+    if(j == SIMULATION.Nx-1 && i != 0 && i != SIMULATION.Ny-1 ) {
         return EMPTY_CELL;
     }
     // Then check for inflow condition
-    if(j == 0 && i > SIMULATION2D.Ny/2 && i != SIMULATION2D.Ny - 1 ) {
+    if(j == 0 && i > SIMULATION.Ny/2 && i != SIMULATION.Ny - 1 ) {
         return INFLOW_CELL;
     }
     // Finally check for solid boundaries
-    if(i == 0 || j == 0 || i == SIMULATION2D.Ny-1 || j == SIMULATION2D.Nx-1) {
+    if(i == 0 || j == 0 || i == SIMULATION.Ny-1 || j == SIMULATION.Nx-1) {
         return SOLID_CELL;
     }
     // Default to fluid cell
@@ -259,7 +259,7 @@ inline int OBSTACLE_SOLID_MASK(int i, int j, int k) {
         return SOLID_CELL;
     }
     
-    if(x >= 0.45 && x <= 0.55 && y >= 0.15 && y <= 0.25) {
+    if(x >= 0.15 && x <= 0.25 && y >= 0.15 && y <= 0.25) {
         return SOLID_CELL;
     }
     
@@ -279,7 +279,7 @@ inline Vec2 OBSTACLE_FLOW_2D(double x, double y,double t){
 
     double U0 = 1.5;
 
-    if(x <= SIMULATION2D.dh  && y < (6.0 - SIMULATION2D.dh/2.0) && y > SIMULATION2D.dh/2){
+    if(x <= SIMULATION.dh  && y < (6.0 - SIMULATION.dh/2.0) && y > SIMULATION.dh/2){
         r.u = U0 - (U0/(0.205*0.205))*pow((y - 0.205),2);
         //r.u = 1.0;
     }
@@ -300,18 +300,18 @@ inline double  OBSTACLE_FLOW_PRESSURE_2D(double x, double y,double t){
 
 inline int OBSTACLE_SOLID_MASK_2D(int  i,int j){
      // First check for empty cell condition
-     if(j == SIMULATION2D.Nx-1 && i != 0 && i != SIMULATION2D.Ny-1) {
+     if(j == SIMULATION.Nx-1 && i != 0 && i != SIMULATION.Ny-1) {
         return EMPTY_CELL;
     }
     // Then check for inflow condition
-    if(j == 0 && i >= 1 && i < SIMULATION2D.Ny-1 ) {
+    if(j == 0 && i >= 1 && i < SIMULATION.Ny-1 ) {
         return INFLOW_CELL;
     }
     // Finally check for solid boundaries
-    if(i == 0 || j == 0 || i == SIMULATION2D.Ny-1 || j == SIMULATION2D.Nx-1 ) {
+    if(i == 0 || j == 0 || i == SIMULATION.Ny-1 || j == SIMULATION.Nx-1 ) {
         return SOLID_CELL;
     }
-    double dh = SIMULATION2D.dh;
+    double dh = SIMULATION.dh;
     double radius = 0.05;
 
     if(pow((j*dh - 0.2),2) +pow((i*dh - 0.2),2)  < radius*radius){
