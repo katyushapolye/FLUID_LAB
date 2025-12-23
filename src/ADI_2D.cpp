@@ -1,4 +1,4 @@
-#include "headers/ADI_2D.h"
+#include "headers/Solvers/ADI_2D.h"
 //X
 MatrixXd ADI2D::U_X_Matrix = MatrixXd();
 MatrixXd ADI2D::V_X_Matrix = MatrixXd();
@@ -44,7 +44,7 @@ MAC ADI2D::Y_STEP_SOL = MAC();
 
 
 double ADI2D::SIG = 0.0;
-double ADI2D::dt = 0.0;
+
 double ADI2D::dh = 0.0;
 
 
@@ -63,7 +63,7 @@ void ADI2D::SolveADI_X_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFi
     int Ny = gridAnt->Ny;
 
     double dh = ADI2D::dh;
-    double dt = ADI2D::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*2)) * (SIMULATION.EPS);
     double rho = (dt/(4*dh));
 
@@ -148,7 +148,7 @@ void ADI2D::SolveADI_Y_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFi
     int Nx = gridSol->Nx;
     int Ny = gridSol->Ny;
     double dh = ADI2D::dh;
-    double dt = ADI2D::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*2)) * (SIMULATION.EPS);
     double rho = (dt/(4*dh));
     
@@ -228,7 +228,7 @@ void ADI2D::SolveADI_X_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFi
     int Nx = gridSol->Nx;
     int Ny = gridSol->Ny;
     double dh = ADI2D::dh;
-    double dt = ADI2D::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*2)) * (SIMULATION.EPS);
     double rho = (dt/(4*dh));
 
@@ -303,7 +303,7 @@ void ADI2D::SolveADI_Y_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFi
     int Nx = gridSol->Nx;
     int Ny = gridSol->Ny;
     double dh = ADI2D::dh;
-    double dt = ADI2D::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*2)) * (SIMULATION.EPS);
     double rho = (dt/(4*dh));
 
@@ -398,7 +398,7 @@ void ADI2D::InitializeADI2D(MAC* grid,double dt,Vec2(*VelocityBorderFunction)(do
     ADI2D::PressureFunction = PressureFunction;
 
 
-    ADI2D::dt = dt;
+    SIMULATION.dt = dt;
     ADI2D::dh = grid->dh;
     
     //sigma coefficient
@@ -509,14 +509,14 @@ void ADI2D::InitializeADI2D(MAC* grid,double dt,Vec2(*VelocityBorderFunction)(do
 
 //IM BREAKING the component on the exit
 void ADI2D::SolveADIStep(MAC* gridAnt,MAC* gridSol,double time){
-    ADI2D::dt = SIMULATION.dt;
+    SIMULATION.dt = SIMULATION.dt;
 
 
     double start = omp_get_wtime();
 
 
  
-    time += ADI2D::dt/2.0;
+    time += SIMULATION.dt/2.0;
     ADI2D::X_STEP_SOL.SetBorder(ADI2D::VelocityBorderFunction,ADI2D::PressureFunction,time);
     if(SIMULATION.level == LevelConfiguration::STEP || SIMULATION.level == LevelConfiguration::OBSTACLE ||  SIMULATION.level == LevelConfiguration::PIPE) ADI2D::X_STEP_SOL.SetNeumannBorder();
     SolveADI_X_U_Step_OPENMP(gridAnt,&X_STEP_SOL,gridAnt,time);
@@ -524,7 +524,7 @@ void ADI2D::SolveADIStep(MAC* gridAnt,MAC* gridSol,double time){
 
 
 
-    time += ADI2D::dt/2.0;
+    time += SIMULATION.dt/2.0;
     ADI2D::Y_STEP_SOL.SetBorder(ADI2D::VelocityBorderFunction,ADI2D::PressureFunction,time);
     if(SIMULATION.level == LevelConfiguration::STEP || SIMULATION.level == LevelConfiguration::OBSTACLE ||  SIMULATION.level == LevelConfiguration::PIPE) ADI2D::Y_STEP_SOL.SetNeumannBorder();
     SolveADI_Y_U_Step_OPENMP(&X_STEP_SOL,&Y_STEP_SOL,gridAnt,time);

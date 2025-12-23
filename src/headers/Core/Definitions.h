@@ -20,6 +20,8 @@
 
 
 
+
+
 struct SIMULATION_CONFIG{
 
     double dh;
@@ -154,6 +156,8 @@ struct ExportSettings {
 
 
 inline int DIMENSION = 3;
+inline bool GPU_ACCELERATION = 1;
+
 
 inline SIMULATION_CONFIG SIMULATION;
 

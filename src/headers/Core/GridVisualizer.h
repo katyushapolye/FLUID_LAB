@@ -73,12 +73,19 @@ private:
     int GetNy() const { return (DIMENSION == 2) ? grid2D->Ny : grid3D->Ny; }
     int GetNz() const { return (DIMENSION == 2) ? 1 : grid3D->Nz; }
 
+    void RenderTelemetryUI();
+    void RenderControlUI(int IT, int F_IT, double time, double tF, double frameTime, bool& simulationRunning, bool& stepOnce);
+    void RenderExportUI();
+    void RenderAerodynamicsUI();
+
 public:
     GridVisualizer(MAC* gridPtr);
     ~GridVisualizer();
     
-    void Render();
+    void Render(int IT, int F_IT, double time, double tF, double frameTime, bool& simulationRunning, bool& stepOnce);
     void UpdateGrid(MAC* newGrid);
+
+
 
 };
 
@@ -689,7 +696,7 @@ void GridVisualizer::ExtractSliceData() {
     }
 }
 
-void GridVisualizer::Render() {
+void GridVisualizer::Render(int IT, int F_IT, double time, double tF, double frameTime, bool& simulationRunning, bool& stepOnce) {
     if ((DIMENSION == 2 && !grid2D) || (DIMENSION == 3 && !grid3D)) return;
     
     ImGui::Begin("Grid Visualizer", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
@@ -1017,43 +1024,501 @@ void GridVisualizer::Render() {
 
         ImGui::End();
     } else {
-        // 3D Volume Visualization
-        if (DIMENSION == 3 && !quiver3DX.empty()) {
-            ImGui::Begin("3D Visualization", nullptr, ImGuiWindowFlags_NoScrollbar);
-            
-            ImPlot::PushColormap(colormap3D);
-            ImPlot3D::PushColormap(colormap3D);
-            float plotSize = ImGui::GetTextLineHeight() * 63;
-            
-            // Calculate physical domain size
-            float physicalX = GetNx() ;
-            float physicalY = GetNy() ;
-            float physicalZ = GetNz() ;
-            
-            if (ImPlot3D::BeginPlot("Quiver Plot 3D", ImVec2(plotSize, plotSize))) {
-                // Set up axis ticks based on physical dimensions
-                ImPlot3D::SetupAxisTicks(ImAxis3D_X, 0.0, (double)physicalX, GetNx() + 1);
-                ImPlot3D::SetupAxisTicks(ImAxis3D_Y, 0.0, (double)physicalY, GetNy() + 1);
-                ImPlot3D::SetupAxisTicks(ImAxis3D_Z, 0.0, (double)physicalZ, GetNz() + 1);
-                
-                ImPlot3D::SetNextQuiverStyle(baseSize, ImPlot3D::GetColormapColor(1)); 
-                ImPlot3D::SetupAxes("X", "Z", "Y");
-                ImPlot3D::PlotQuiver("Magnitude", 
-                                     quiver3DX.data(), quiver3DZ.data(), quiver3DY.data(),
-                                     quiver3DU.data(), quiver3DW.data(), quiver3DV.data(),
-                                     quiver3DX.size(), 
-                                     minValue, maxValue, 
-                                     quiver3DFlags);
-                ImPlot3D::EndPlot();
-            }
-            
-            ImGui::SameLine();
-            ImPlot::ColormapScale("##HeatmapScale", minValue, maxValue, ImVec2(100, plotSize));
-            ImPlot::PopColormap();
-            ImPlot3D::PopColormap();
+// 3D Volume Visualization
+if (DIMENSION == 3 && !quiver3DX.empty()) {
+    ImGui::Begin("3D Visualization", nullptr, ImGuiWindowFlags_NoScrollbar);
+    ImPlot::PushColormap(colormap3D);
+    ImPlot3D::PushColormap(colormap3D);
+    float plotSize = ImGui::GetTextLineHeight() * 63;
+    
+    // Calculate physical domain size
+    float Lx = grid3D->Nx ;
+    float Ly = grid3D->Ny ;
+    float Lz = grid3D->Nz ;
+    
+    if (ImPlot3D::BeginPlot("Quiver Plot 3D", ImVec2(plotSize, plotSize))) {
+        // Set up axis limits based on physical dimensions
+        ImPlot3D::SetupAxisLimits(ImAxis3D_X, 0, Lx, ImGuiCond_Always);
+        ImPlot3D::SetupAxisLimits(ImAxis3D_Y, 0, Ly, ImGuiCond_Always);
+        ImPlot3D::SetupAxisLimits(ImAxis3D_Z, 0, Lz, ImGuiCond_Always);
+        
 
-            ImGui::End();
-        }
+        
+        ImPlot3D::SetupAxes("X", "Z", "Y");
+        ImPlot3D::SetNextQuiverStyle(baseSize, ImPlot3D::GetColormapColor(1)); 
+        
+        ImPlot3D::PlotQuiver("Magnitude", 
+            quiver3DX.data(), quiver3DZ.data(), quiver3DY.data(),
+            quiver3DU.data(), quiver3DW.data(), quiver3DV.data(),
+            quiver3DX.size(), 
+            minValue, maxValue, 
+            quiver3DFlags);
+        
+        ImPlot3D::EndPlot();
+    }
+    
+    ImGui::SameLine();
+    ImPlot::ColormapScale("##HeatmapScale", minValue, maxValue, ImVec2(100, plotSize));
+    ImPlot::PopColormap();
+    ImPlot3D::PopColormap();
+    ImGui::End();
     }
 }
+
+
+    this->RenderControlUI(IT,F_IT,time,tF,frameTime,simulationRunning,stepOnce);
+    this->RenderTelemetryUI();
+    this->RenderAerodynamicsUI();
+    this->RenderExportUI();
+}
+
+void GridVisualizer::RenderControlUI(int IT, int F_IT, double time, double tF, double frameTime, bool& simulationRunning, bool& stepOnce) {
+    ImGui::Begin("Simulation Control");
+    
+    ImGui::Text("Iteration: %d / %d", IT, F_IT);
+    ImGui::Text("Time: %.4f / %.4f", time, tF);
+    
+    // Display divergence based on dimension
+    if(DIMENSION == 3) {
+        ImGui::Text("Divergence: %.6e", SIMULATION.GRID_SOL->GetDivSum());
+    } else if(DIMENSION == 2) {
+        ImGui::Text("Divergence: %.6e", SIMULATION.GRID_SOL->GetDivSum());
+    }
+    
+    ImGui::Text("Frame Time: %.8f ms", frameTime * 1000.0);
+    
+    if (simulationRunning) {
+        ImGui::Text("Status: Running");
+    } else {
+        ImGui::Text("Status: Paused");
+    }
+    
+    ImGui::Separator();
+    
+    if (ImGui::Button(simulationRunning ? "Pause" : "Run")) {
+        simulationRunning = !simulationRunning;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Step")) {
+        stepOnce = true;
+    }
+    
+    ImGui::End();
+}
+
+void GridVisualizer::RenderTelemetryUI()
+{
+
+    ImGui::Begin("Simulation Telemetry");
+    
+            const double t = TELEMETRY.time.back();
+        const double window = 5.0;
+    float avail = ImGui::GetContentRegionAvail().x;
+    float plot_w = avail * 0.5f - ImGui::GetStyle().ItemSpacing.x * 0.5f;
+    ImVec2 plot_size(plot_w, 300);
+    
+    // ---- Row 1 ----
+    if (ImPlot::BeginPlot("Divergence Evolution", plot_size)) {
+        ImPlot::SetupAxes("Time", "Divergence Sum",
+                          ImPlotAxisFlags_None,
+                          ImPlotAxisFlags_AutoFit);
+        ImPlot::SetupAxisLimits(
+            ImAxis_X1,
+            t-window*0.5,
+            t+window*0.5,
+            ImGuiCond_Always
+        );
+        ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
+        ImPlot::PlotLine("After Projection",
+            TELEMETRY.time.data(), TELEMETRY.div_sum.data(), TELEMETRY.time.size());
+        ImPlot::PlotLine("Before Projection",
+            TELEMETRY.time.data(), TELEMETRY.div_sum_before_proj.data(), TELEMETRY.time.size());
+        ImPlot::EndPlot();
+    }
+    
+    ImGui::SameLine();
+    
+    if (ImPlot::BeginPlot("CFL Condition", plot_size)) {
+        ImPlot::SetupAxes("Time", "CFL",
+                          ImPlotAxisFlags_None,
+                          ImPlotAxisFlags_AutoFit);
+                ImPlot::SetupAxisLimits(
+            ImAxis_X1,
+            t-window*0.5,
+            t+window*0.5,
+            ImGuiCond_Always
+        );
+
+        ImPlot::PlotLine("Adv. CFL",
+            TELEMETRY.time.data(), TELEMETRY.advcfl.data(), TELEMETRY.time.size());
+        ImPlot::PlotLine("Diff. CFL",
+            TELEMETRY.time.data(), TELEMETRY.diffcfl.data(), TELEMETRY.time.size());
+        double x = 1.0;
+        ImPlot::PlotInfLines("CFL = 1", &x, 0,1);
+        ImPlot::EndPlot();
+    }
+    
+    // ---- Row 2 ----
+    if (ImPlot::BeginPlot("Grid Residual", plot_size)) {
+        ImPlot::SetupAxes(
+            "Time", "Residual",
+            ImPlotAxisFlags_None,
+            ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit
+        );
+
+
+
+        ImPlot::SetupAxisLimits(
+            ImAxis_X1,
+            t-window*0.5,
+            t+window*0.5,
+            ImGuiCond_Always
+        );
+
+        ImPlot::PlotLine(
+            "Iteration Residual",
+            TELEMETRY.time.data(),
+            TELEMETRY.residual.data(),
+            TELEMETRY.time.size()
+        );
+
+        ImPlot::EndPlot();
+    }
+    ImGui::SameLine();
+    
+    if (ImPlot::BeginPlot("Performance (CPU vs GPU)", plot_size)) {
+        double xs[] = {0.0, 1.0};
+        static const char* labels[] = {"ADI (CPU)", "Pressure (GPU)"};
+        double values[] = {
+            TELEMETRY.cpu_time.back(),
+            TELEMETRY.gpu_time.back()
+        };
+    
+        static double y_max = 0.05;
+        y_max = (std::max)(y_max, 1.2 * (std::max)(values[0], values[1]));
+    
+        ImPlot::SetupAxes(nullptr, "Seconds");
+        ImPlot::SetupAxisLimits(ImAxis_Y1, 0.0, y_max, ImGuiCond_Always);
+        ImPlot::SetupAxisTicks(ImAxis_X1, xs, 2, labels);
+        ImVec4 colors[] = { ImVec4(0.4f, 0.7f, 0.0f, 1.0f),
+                            ImVec4(0.2f, 0.4f, 1.0f, 1.0f) };
+
+        for (int i = 0; i < 2; i++) {
+            ImPlot::PushStyleColor(ImPlotCol_Fill, colors[i]);
+            ImPlot::PlotBars(labels[i], &xs[i], &values[i], 1, 0.5);
+            ImPlot::PopStyleColor();
+        }
+        ImPlot::EndPlot();
+    }
+    
+    ImGui::End();
+}
+
+void GridVisualizer::RenderAerodynamicsUI() {
+    ImGui::Begin("Aerodynamics Telemetry");
+
+    const double t = TELEMETRY.time.back();
+    const double window = 5.0;
+    
+    float avail = ImGui::GetContentRegionAvail().x;
+    float plot_w = avail * 0.5f - ImGui::GetStyle().ItemSpacing.x * 0.5f;
+    ImVec2 plot_size(plot_w, 300);
+    
+    // ---- Row 1: Lift and Drag Coefficients ----
+    if (ImPlot::BeginPlot("Lift Coefficient (Cl)", plot_size)) {
+        ImPlot::SetupAxes("Time", "Cl",
+                         ImPlotAxisFlags_None,
+                         ImPlotAxisFlags_AutoFit);
+        
+        if (!AERODYNAMICS.Cl.empty()) {
+            ImPlot::PushStyleColor(ImPlotCol_Line,ImVec4(0.0,0.0,1.0,1.0f));
+
+                    ImPlot::SetupAxisLimits(
+            ImAxis_X1,
+            t-window*0.5,
+            t+window*0.5,
+            ImGuiCond_Always
+        );
+            ImPlot::PlotLine("Cl",
+                           AERODYNAMICS.time.data(), 
+                           AERODYNAMICS.Cl.data(), 
+                           AERODYNAMICS.Cl.size());
+            ImPlot::PopStyleColor();
+            
+            // Show current value
+            double current_cl = AERODYNAMICS.Cl.back();
+            ImPlot::PlotText(("Cl = " + std::to_string(current_cl)).c_str(), 
+                           AERODYNAMICS.time.back(), current_cl);
+        }
+        ImPlot::EndPlot();
+    }
+    
+    ImGui::SameLine();
+    
+    if (ImPlot::BeginPlot("Drag Coefficient (Cd)", plot_size)) {
+        ImPlot::SetupAxes("Time", "Cd",
+                         ImPlotAxisFlags_None,
+                         ImPlotAxisFlags_AutoFit);
+        
+        if (!AERODYNAMICS.Cd.empty()) {
+            ImPlot::PushStyleColor(ImPlotCol_Line,ImVec4(1.0,0.0,0.0,1.0f));
+                    ImPlot::SetupAxisLimits(
+            ImAxis_X1,
+            t-window*0.5,
+            t+window*0.5,
+            ImGuiCond_Always
+            );
+            ImPlot::PlotLine("Cd",
+                           AERODYNAMICS.time.data(), 
+                           AERODYNAMICS.Cd.data(), 
+                           AERODYNAMICS.Cd.size());
+            ImPlot::PopStyleColor();
+            // Show current value
+            double current_cd = AERODYNAMICS.Cd.back();
+            ImPlot::PlotText(("Cd = " + std::to_string(current_cd)).c_str(), 
+                           AERODYNAMICS.time.back(), current_cd);
+        }
+        ImPlot::EndPlot();
+    }
+    
+    // ---- Row 2: Pressure Difference and Lift/Drag Ratio ----
+    if (ImPlot::BeginPlot("Pressure Difference", plot_size)) {
+
+        ImPlot::SetupAxes("Time", "DeltaP",
+                         ImPlotAxisFlags_None,
+                         ImPlotAxisFlags_AutoFit);
+        
+        if (!AERODYNAMICS.pressure_drop.empty()) {
+            ImPlot::PushStyleColor(ImPlotCol_Line,ImVec4(0.0,1.0,0.0,1.0f));
+                                ImPlot::SetupAxisLimits(
+            ImAxis_X1,
+            t-window*0.5,
+            t+window*0.5,
+            ImGuiCond_Always
+        );
+            ImPlot::PlotLine("DeltaP",
+                           AERODYNAMICS.time.data(), 
+                           AERODYNAMICS.pressure_drop.data(), 
+                           AERODYNAMICS.pressure_drop.size());
+            ImPlot::PopStyleColor();
+            
+            // Show current value
+            double current_pdiff = AERODYNAMICS.pressure_drop.back();
+            ImPlot::PlotText(("DeltaP = " + std::to_string(current_pdiff)).c_str(), 
+                           AERODYNAMICS.time.back(), current_pdiff);
+        }
+        ImPlot::EndPlot();
+    }
+    
+    ImGui::SameLine();
+    
+    if (ImPlot::BeginPlot("Lift-to-Drag Ratio", plot_size)) {
+        ImPlot::SetupAxes("Time", "Cl/Cd",
+                         ImPlotAxisFlags_None,
+                         ImPlotAxisFlags_AutoFit);
+        
+        if (!AERODYNAMICS.Cl.empty() && !AERODYNAMICS.Cd.empty()) {
+
+        
+            ImPlot::PushStyleColor(ImPlotCol_Line,ImVec4(1.0,1.0,1.0,1.0f));
+                                ImPlot::SetupAxisLimits(
+            ImAxis_X1,
+            t-window*0.5,
+            t+window*0.5,
+            ImGuiCond_Always
+        );
+            ImPlot::PlotLine("L/D",
+                           AERODYNAMICS.time.data(), 
+                           AERODYNAMICS.LtoDRatio.data(), 
+                           AERODYNAMICS.LtoDRatio.size());
+            ImPlot::PopStyleColor();
+            
+
+        }
+        ImPlot::EndPlot();
+    }
+    
+    // ---- Row 3: Statistics Table ----
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Text("Current Aerodynamic Data:");
+    ImGui::Spacing();
+    
+    if (ImGui::BeginTable("AeroStatsTable", 4, 
+                         ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+        ImGui::TableSetupColumn("Parameter");
+        ImGui::TableSetupColumn("Current");
+        ImGui::TableSetupColumn("Mean (last 100)");
+        ImGui::TableSetupColumn("Std Dev (last 100)");
+        ImGui::TableHeadersRow();
+        
+        auto compute_stats = [](const std::vector<double>& data, int n_samples) {
+            if (data.empty()) return std::make_pair(0.0, 0.0);
+            
+            int start = (std::max)(0, (int)data.size() - n_samples);
+            int count = data.size() - start;
+            
+            double sum = 0.0;
+            for (int i = start; i < data.size(); i++) {
+                sum += data[i];
+            }
+            double mean = sum / count;
+            
+            double sq_sum = 0.0;
+            for (int i = start; i < data.size(); i++) {
+                double diff = data[i] - mean;
+                sq_sum += diff * diff;
+            }
+            double std_dev = std::sqrt(sq_sum / count);
+            
+            return std::make_pair(mean, std_dev);
+        };
+        
+        // Lift coefficient row
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        ImGui::Text("Cl");
+        ImGui::TableNextColumn();
+        if (!AERODYNAMICS.Cl.empty()) {
+            ImGui::Text("%.6f", AERODYNAMICS.Cl.back());
+            ImGui::TableNextColumn();
+            auto stats = compute_stats(AERODYNAMICS.Cl, 100);
+            ImGui::Text("%.6f", stats.first);
+            ImGui::TableNextColumn();
+            ImGui::Text("%.6f", stats.second);
+        } else {
+            ImGui::TableNextColumn(); ImGui::Text("-");
+            ImGui::TableNextColumn(); ImGui::Text("-");
+            ImGui::TableNextColumn(); ImGui::Text("-");
+        }
+        
+        // Drag coefficient row
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        ImGui::Text("Cd");
+        ImGui::TableNextColumn();
+        if (!AERODYNAMICS.Cd.empty()) {
+            ImGui::Text("%.6f", AERODYNAMICS.Cd.back());
+            ImGui::TableNextColumn();
+            auto stats = compute_stats(AERODYNAMICS.Cd, 100);
+            ImGui::Text("%.6f", stats.first);
+            ImGui::TableNextColumn();
+            ImGui::Text("%.6f", stats.second);
+        } else {
+            ImGui::TableNextColumn(); ImGui::Text("-");
+            ImGui::TableNextColumn(); ImGui::Text("-");
+            ImGui::TableNextColumn(); ImGui::Text("-");
+        }
+        
+        // Pressure difference row
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        ImGui::Text("ΔP");
+        ImGui::TableNextColumn();
+        if (!AERODYNAMICS.pressure_drop.empty()) {
+            ImGui::Text("%.6f", AERODYNAMICS.pressure_drop.back());
+            ImGui::TableNextColumn();
+            auto stats = compute_stats(AERODYNAMICS.pressure_drop, 100);
+            ImGui::Text("%.6f", stats.first);
+            ImGui::TableNextColumn();
+            ImGui::Text("%.6f", stats.second);
+        } else {
+            ImGui::TableNextColumn(); ImGui::Text("-");
+            ImGui::TableNextColumn(); ImGui::Text("-");
+            ImGui::TableNextColumn(); ImGui::Text("-");
+        }
+        
+        // L/D ratio row
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        ImGui::Text("L/D");
+        ImGui::TableNextColumn();
+        if (!AERODYNAMICS.Cl.empty() && !AERODYNAMICS.Cd.empty()) {
+            double cd = AERODYNAMICS.Cd.back();
+            double ld = (std::abs(cd) > 1e-10) ? AERODYNAMICS.Cl.back() / cd : 0.0;
+            ImGui::Text("%.6f", ld);
+            
+            // Compute stats for L/D
+            std::vector<double> ld_ratio;
+            int n_samples = (std::min)(100, (int)AERODYNAMICS.Cl.size());
+            int start = AERODYNAMICS.Cl.size() - n_samples;
+            
+            for (int i = start; i < AERODYNAMICS.Cl.size(); i++) {
+                double cd_val = AERODYNAMICS.Cd[i];
+                if (std::abs(cd_val) > 1e-10) {
+                    ld_ratio.push_back(AERODYNAMICS.Cl[i] / cd_val);
+                }
+            }
+            
+            if (!ld_ratio.empty()) {
+                auto stats = compute_stats(ld_ratio, ld_ratio.size());
+                ImGui::TableNextColumn();
+                ImGui::Text("%.6f", stats.first);
+                ImGui::TableNextColumn();
+                ImGui::Text("%.6f", stats.second);
+            } else {
+                ImGui::TableNextColumn(); ImGui::Text("-");
+                ImGui::TableNextColumn(); ImGui::Text("-");
+            }
+        } else {
+            ImGui::TableNextColumn(); ImGui::Text("-");
+            ImGui::TableNextColumn(); ImGui::Text("-");
+            ImGui::TableNextColumn(); ImGui::Text("-");
+        }
+        
+        ImGui::EndTable();
+    }
+    
+    ImGui::End();
+}
+
+void GridVisualizer::RenderExportUI() {
+    ImGui::Begin("Export Settings");
+    
+    bool wasEnabled = EXPORT_SETTINGS.enabled;
+    ImGui::Checkbox("Enable Export", &EXPORT_SETTINGS.enabled);
+    
+
+    
+    if (EXPORT_SETTINGS.enabled) {
+        ImGui::Separator();
+        ImGui::Text("Export Intervals");
+        ImGui::SliderInt("Telemetry (Every N Frames)", &EXPORT_SETTINGS.telemetryInterval, 1, 100);
+        ImGui::SliderInt("Grid (Every N Frames)", &EXPORT_SETTINGS.gridInterval, 1, 500);
+        
+        ImGui::Separator();
+        ImGui::Text("Grid Export");
+        ImGui::Checkbox("Export Grid (VTK)", &EXPORT_SETTINGS.exportGridData);
+        
+        ImGui::Separator();
+        ImGui::Text("Simulation Telemetry");
+        ImGui::Checkbox("Time", &EXPORT_SETTINGS.exportTime);
+        ImGui::Checkbox("Divergence Sum", &EXPORT_SETTINGS.exportDivSum);
+        ImGui::Checkbox("Divergence Before Projection", &EXPORT_SETTINGS.exportDivSumBeforeProj);
+        ImGui::Checkbox("CFL Number", &EXPORT_SETTINGS.exportCFL);
+        ImGui::Checkbox("Residual", &EXPORT_SETTINGS.exportResidual);
+        ImGui::Checkbox("CPU Time (ADI)", &EXPORT_SETTINGS.exportCPUTime);
+        ImGui::Checkbox("GPU Time (Pressure)", &EXPORT_SETTINGS.exportGPUTime);
+        
+        // Show aerodynamics options only for 2D with obstacle
+        if ( SIMULATION.level == LevelConfiguration::OBSTACLE || SIMULATION.level == LevelConfiguration::OBSTACLE )  {
+            ImGui::Separator();
+            ImGui::Text("Aerodynamics Telemetry");
+            ImGui::Checkbox("Lift Coefficient (Cl)", &EXPORT_SETTINGS.exportCl);
+            ImGui::Checkbox("Drag Coefficient (Cd)", &EXPORT_SETTINGS.exportCd);
+            ImGui::Checkbox("Pressure Drop", &EXPORT_SETTINGS.exportPressureDrop);
+            ImGui::Checkbox("L/D Ratio", &EXPORT_SETTINGS.exportLtoDRatio);
+        }
+        
+        ImGui::Separator();
+        ImGui::TextWrapped("Last Telemetry Export: Frame %d", EXPORT_SETTINGS.lastExportedTelemetryFrame);
+        ImGui::TextWrapped("Last Grid Export: Frame %d (File #%d)", 
+                          EXPORT_SETTINGS.lastExportedGridFrame,
+                          EXPORT_SETTINGS.gridExportCounter - 1);
+    }
+    
+    ImGui::End();
+}
+
+
 #endif // GRID_VISUALIZER_H

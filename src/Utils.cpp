@@ -1,13 +1,4 @@
 #include "Utils.h"
-#include <time.h>
-#include <sys/time.h>
-#include <algorithm>
-#include <fstream>
-#include <iostream>
-#include "Definitions.h"
-#include <sstream>
-#include <iomanip>
-#include <filesystem>
 
 
 
@@ -15,76 +6,14 @@ void CPUTimer::start() {
             m_start = std::clock();
         }
         
-        double CPUTimer::stop() {
+double CPUTimer::stop() {
             std::clock_t end = std::clock();
             return static_cast<double>(end - m_start) / CLOCKS_PER_SEC;
         }
     
 
 
-
-
-// Template function implementations
-template <typename Derived>
-void exportMatrixToFile(const Eigen::MatrixBase<Derived>& matrix, 
-                       const std::string& filename, 
-                       const std::string& delimiter) {
-    std::ofstream outFile(filename);
     
-    if (!outFile.is_open()) {
-        std::cerr << "Error: Could not open file " << filename << " for writing." << std::endl;
-        return;
-    }
-    
-    // Write matrix data
-    for (int i = 0; i < matrix.rows(); ++i) {
-        for (int j = 0; j < matrix.cols(); ++j) {
-            outFile << matrix(i, j);
-            if (j < matrix.cols() - 1) {
-                outFile << delimiter;
-            }
-        }
-        outFile << "\n";
-    }
-    
-    outFile.close();
-    std::cout << "Matrix successfully exported to " << filename << std::endl;
-}
-
-template <typename Derived>
-void exportVectorToFile(const Eigen::MatrixBase<Derived>& vector,
-                        const std::string& filename,
-                        const std::string& delimiter) {
-    static_assert(Derived::ColsAtCompileTime == 1 || Derived::RowsAtCompileTime == 1,
-                 "exportVectorToFile: Input must be a vector (either row or column)");
-    
-    std::ofstream outFile(filename);
-    
-    if (!outFile.is_open()) {
-        std::cerr << "Error: Could not open file " << filename << " for writing." << std::endl;
-        return;
-    }
-    
-    // Write vector data
-    for (int i = 0; i < vector.size(); ++i) {
-        outFile << vector(i);
-        if (i < vector.size() - 1) {
-            outFile << delimiter;
-        }
-    }
-    
-    outFile.close();
-    std::cout << "Vector successfully exported to " << filename << std::endl;
-}
-
-// Explicit template instantiations
-// You would need to add instantiations for all the types you use with these templates
-template void exportMatrixToFile<Eigen::MatrixXd>(const Eigen::MatrixBase<Eigen::MatrixXd>& matrix, 
-                                                const std::string& filename, 
-                                                const std::string& delimiter);
-template void exportVectorToFile<Eigen::VectorXd>(const Eigen::MatrixBase<Eigen::VectorXd>& vector,
-                                                const std::string& filename,
-                                                const std::string& delimiter);
 
 // Non-template function implementations
 double GetWallTime() {
@@ -97,38 +26,6 @@ double GetWallTime() {
 }
 
 
-void writeSparseMatrixToFile(const Eigen::SparseMatrix<double>& matrix, const std::string& filename) {
-    // Open file in binary mode
-    std::ofstream out(filename, std::ios::binary);
-    if (!out.is_open()) {
-        throw std::runtime_error("Could not open file for writing");
-    }
-
-    // Write matrix dimensions (rows, cols)
-    int rows = matrix.rows();
-    int cols = matrix.cols();
-    out.write(reinterpret_cast<const char*>(&rows), sizeof(int));
-    out.write(reinterpret_cast<const char*>(&cols), sizeof(int));
-
-    // Write number of non-zero elements
-    int nnz = matrix.nonZeros();
-    out.write(reinterpret_cast<const char*>(&nnz), sizeof(int));
-
-    // Write the data in COO format (row, col, value)
-    for (int k = 0; k < matrix.outerSize(); ++k) {
-        for (Eigen::SparseMatrix<double>::InnerIterator it(matrix, k); it; ++it) {
-            int row = it.row();
-            int col = it.col();
-            double value = it.value();
-            
-            out.write(reinterpret_cast<const char*>(&row), sizeof(int));
-            out.write(reinterpret_cast<const char*>(&col), sizeof(int));
-            out.write(reinterpret_cast<const char*>(&value), sizeof(double));
-        }
-    }
-
-    out.close();
-}
 
 void TDMA(Eigen::MatrixXd& mat, Eigen::VectorXd& font, Eigen::VectorXd& sol) {
     const int n = mat.rows();
@@ -228,43 +125,7 @@ void free_csr_matrix(CSRMatrix* csr) {
     }
 }
 
-void export_csr_to_file(const CSRMatrix* csr, const std::string& filename) {
-    std::ofstream outfile(filename);
-    if (!outfile.is_open()) {
-        std::cerr << "Error: Could not open file " << filename << " for writing.\n";
-        return;
-    }
-    
-    // Write header information
-    outfile << "CSR Matrix Format\n";
-    outfile << "Rows: " << csr->num_rows << "\n";
-    outfile << "Columns: " << csr->num_cols << "\n";
-    outfile << "Non-zero entries: " << csr->nnz << "\n\n";
-    
-    // Write row pointers
-    outfile << "Row pointers (row_ptr):\n";
-    for (int i = 0; i <= csr->num_rows; ++i) {
-        outfile << csr->row_ptr[i] << " ";
-    }
-    outfile << "\n\n";
-    
-    // Write column indices
-    outfile << "Column indices (col_ind):\n";
-    for (int i = 0; i < csr->nnz; ++i) {
-        outfile << csr->col_ind[i] << " ";
-    }
-    outfile << "\n\n";
-    
-    // Write values
-    outfile << "Values:\n";
-    for (int i = 0; i < csr->nnz; ++i) {
-        outfile << csr->values[i] << " ";
-    }
-    outfile << "\n";
-    
-    outfile.close();
-    std::cout << "CSR matrix successfully exported to " << filename << "\n";
-}
+
 
 std::string LevelConfigurationToString(LevelConfiguration config) {
     if(config == LevelConfiguration::LID_CAVITY) {
@@ -286,31 +147,3 @@ std::string LevelConfigurationToString(LevelConfiguration config) {
 }
 
 
-bool WriteToCSV(double value, std::string levelString, std::string gridSize,std::string dataType) {
-    try {
-        std::string exportBasePath = "Data/" + dataType + "/";
-        std::ostringstream oss;
-        oss << exportBasePath <<  dataType  << "_" << levelString << "_" << gridSize << "_re" << SIMULATION.RE << ".csv";
-        std::string filename = oss.str();
-        std::filesystem::create_directories(exportBasePath);
-        // Open file in append mode
-        std::ofstream file(filename, std::ios::app);
-        
-        // Check if file opened successfully
-        if (!file.is_open()) {
-            std::cerr << "Error opening file: " << filename << std::endl;
-            return false;
-        }
-        
-        // Write the value followed by a comma and newline
-        file << value << "," << std::endl;
-        
-        // Close the file
-        file.close();
-        
-        return true;
-    } catch (const std::exception& e) {
-        std::cerr << "Exception occurred: " << e.what() << std::endl;
-        return false;
-    }
-}

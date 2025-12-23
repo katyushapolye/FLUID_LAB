@@ -1,4 +1,4 @@
-#include "headers/MAC.h"
+#include "headers/Core/MAC.h"
 
 
 MAC::MAC()
@@ -806,6 +806,7 @@ void MAC::SetNeumannBorder() {
         for (int i = 1; i < Ny - 1; i++) {
             this->SetU(i, Nx + 1 - 2, this->GetU(i, Nx + 1 - 3));
             this->SetU(i, Nx + 1 - 1, this->GetU(i, Nx + 1 - 2));
+            this->SetV(i,Nx-1,this->GetV(i,Nx-2)); //imposing on v 
         }
         return;
     }
@@ -815,6 +816,8 @@ void MAC::SetNeumannBorder() {
         for (int k = 1; k < Nz - 1; k++) {
             this->SetU(i, Nx + 1 - 2, k, this->GetU(i, Nx + 1 - 3, k));
             this->SetU(i, Nx + 1 - 1, k, this->GetU(i, Nx + 1 - 2, k));
+            this->SetV(i,Nx-1,k,this->GetV(i,Nx-2,k)); 
+            this->SetW(i,Nx-1,k,this->GetW(i,Nx-2,k)); 
         }
     }
 }

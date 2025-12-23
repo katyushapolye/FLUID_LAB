@@ -9,6 +9,15 @@
 #include <amgx_c.h>
 #include <ctime>
 #include <utility> // for std::forward
+#include <time.h>
+#include <sys/time.h>
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <filesystem>
+
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -30,8 +39,6 @@ struct AMGXSolver {
     AMGX_resources_handle rsrc;
     AMGX_config_handle config;
 };
-
-
 
 
 struct Vec3 {
@@ -71,6 +78,7 @@ struct Domain2D {
     double yf;
 
 };
+
 
 class CPUTimer {
     public:

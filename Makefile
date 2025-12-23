@@ -34,8 +34,8 @@ NVCC := nvcc
 ############################
 CXXFLAGS := -std=c++17 -Wall -Wextra -Wno-unused-parameter -Wno-deprecated-copy
 CXXFLAGS += -O3 -fopenmp -MMD -MP
-CXXFLAGS += -Isrc/headers
-CXXFLAGS += -I$(CUDA_PATH)/include
+CXXFLAGS += -Isrc/headers -Isrc/headers/Solvers
+CXXFLAGS += -I$(CUDA_PATH)/include 
 CXXFLAGS += -I$(AMGX_INCLUDE_PATH) -I$(AMGX_BUILD_PATH)
 CXXFLAGS += -I$(EIGEN_PATH)
 CXXFLAGS += -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
@@ -46,7 +46,7 @@ CXXFLAGS += -I$(IMPLOT3D_DIR)
 # NVCC flags
 ############################
 NVCCFLAGS := -std=c++17 -O3 -Xcompiler -Wall,-Wextra -MMD -MP
-NVCCFLAGS += -Isrc/headers
+NVCCFLAGS += -Isrc/headers -Isrc/headers/Solvers
 NVCCFLAGS += -I$(CUDA_PATH)/include
 NVCCFLAGS += -I$(AMGX_INCLUDE_PATH) -I$(AMGX_BUILD_PATH)
 NVCCFLAGS += -I$(EIGEN_PATH)

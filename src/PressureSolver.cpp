@@ -1,4 +1,4 @@
-#include "headers/PressureSolver.h"
+#include "headers/Solvers/PressureSolver.h"
 
 int PressureSolver::Nx = 0;
 int PressureSolver::Ny = 0;
@@ -315,7 +315,7 @@ void PressureSolver::InitializePressureSolver(MAC *grid,double dt)
 
 
     PressureSolver::PRESSURE_MATRIX_EIGEN = mat;
-    writeSparseMatrixToFile(PRESSURE_MATRIX_EIGEN,"Exports/Eigen/PressureMat.txt");
+
 
     PRESSURE_MATRIX = coo_to_csr(rows,collums,values,NON_ZERO,MatSize,MatSize);
     PressureSolver::AMGX_Handle = new AMGXSolver();

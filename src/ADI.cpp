@@ -1,4 +1,4 @@
-#include "headers/ADI.h"
+#include "headers/Solvers/ADI.h"
 //X
 MatrixXd ADI::U_X_Matrix = MatrixXd();
 MatrixXd ADI::V_X_Matrix = MatrixXd();
@@ -61,7 +61,6 @@ MAC ADI::Z_STEP_SOL = MAC();
 
 
 double ADI::SIG = 0.0;
-double ADI::dt = 0.0;
 double ADI::dh = 0.0;
 
 
@@ -76,7 +75,7 @@ void ADI::SolveADI_X_U_Step(MAC* gridAnt,MAC* gridSol,MAC* velocityField,double 
     int Ny = gridAnt->Ny;
     int Nz = gridAnt->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3))* (SIMULATION.EPS);
     double rho = (dt/(6*dh));
     for(int i =1;i<Ny-1;i++){ //not considering the border terms on i
@@ -138,7 +137,7 @@ void ADI::SolveADI_Y_U_Step(MAC* gridAnt,MAC* gridSol,MAC* velocityField,double 
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3))* (SIMULATION.EPS);
     double rho = (dt/(6*dh));
     
@@ -208,7 +207,7 @@ void ADI::SolveADI_Z_U_Step(MAC* gridAnt,MAC* gridSol,MAC* velocityField,double 
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3))* (SIMULATION.EPS);
     double rho = (dt/(6*dh));
     for(int i =1;i<Ny-1;i++){
@@ -272,7 +271,7 @@ void ADI::SolveADI_X_V_Step(MAC* gridAnt,MAC* gridSol,MAC* velocityField,double 
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3))* (SIMULATION.EPS);
     double rho = (dt/(6*dh));
 
@@ -333,7 +332,7 @@ void ADI::SolveADI_Y_V_Step(MAC* gridAnt,MAC* gridSol,MAC* velocityField,double 
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3))* (SIMULATION.EPS);
     double rho = (dt/(6*dh));
     for(int j = 1;j<Nx-1;j++){
@@ -395,7 +394,7 @@ void ADI::SolveADI_Z_V_Step(MAC* gridAnt,MAC* gridSol,MAC* velocityField,double 
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3))* (SIMULATION.EPS);
     double rho = (dt/(6*dh));
     for(int i = 2;i<Ny+1-2;i++){
@@ -456,7 +455,7 @@ void ADI::SolveADI_X_W_Step(MAC* gridAnt,MAC* gridSol,MAC* velocityField,double 
     int Ny = gridAnt->Ny;
     int Nz = gridAnt->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3))* (SIMULATION.EPS);
     double rho = (dt/(6*dh));
 
@@ -516,7 +515,7 @@ void ADI::SolveADI_Y_W_Step(MAC* gridAnt,MAC* gridSol,MAC* velocityField,double 
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3))* (SIMULATION.EPS);
     double rho = (dt/(6*dh));
     for(int j = 1;j<Nx-1;j++){
@@ -573,7 +572,7 @@ void ADI::SolveADI_Z_W_Step(MAC* gridAnt,MAC* gridSol,MAC* velocityField,double 
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3))* (SIMULATION.EPS);
     double rho = (dt/(6*dh));
     for(int i =1;i<Ny-1;i++){
@@ -634,7 +633,7 @@ void ADI::SolveADI_X_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
     int Ny = gridAnt->Ny;
     int Nz = gridAnt->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3)) * (SIMULATION.EPS);
     double rho = (dt/(6*dh));
 
@@ -723,7 +722,7 @@ void ADI::SolveADI_Y_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3)) * (SIMULATION.EPS);
     double rho = (dt/(6*dh));
     
@@ -804,7 +803,7 @@ void ADI::SolveADI_Z_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3)) * (SIMULATION.EPS);
     double rho = (dt/(6*dh));
 
@@ -884,7 +883,7 @@ void ADI::SolveADI_X_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3)) * (SIMULATION.EPS);
     double rho = (dt/(6*dh));
 
@@ -963,7 +962,7 @@ void ADI::SolveADI_Y_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3)) * (SIMULATION.EPS);
     double rho = (dt/(6*dh));
 
@@ -1047,7 +1046,7 @@ void ADI::SolveADI_Z_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3))* (SIMULATION.EPS);
     double rho = (dt/(6*dh));
 
@@ -1128,7 +1127,7 @@ void ADI::SolveADI_X_W_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
     int Ny = gridAnt->Ny;
     int Nz = gridAnt->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3))* (SIMULATION.EPS);
     double rho = (dt/(6*dh));
 
@@ -1205,7 +1204,7 @@ void ADI::SolveADI_Y_W_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3))* (SIMULATION.EPS);
     double rho = (dt/(6*dh));
 
@@ -1283,7 +1282,7 @@ void ADI::SolveADI_Z_W_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
     double dh = ADI::dh;
-    double dt = ADI::dt;
+    double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3))* (SIMULATION.EPS);
     double rho = (dt/(6*dh));
 
@@ -1369,7 +1368,7 @@ void ADI::InitializeADI(MAC* grid,double dt,Vec3(*VelocityBorderFunction)(double
     ADI::PressureFunction = PressureFunction;
 
 
-    ADI::dt = dt;
+    SIMULATION.dt = dt;
     ADI::dh = grid->dh;
     
     //sigma coefficient
@@ -1553,7 +1552,7 @@ void ADI::SolveADIStep(MAC* gridAnt,MAC* gridSol,double time){
 
 
  
-    time += ADI::dt/3.0;
+    time += SIMULATION.dt/3.0;
     ADI::X_STEP_SOL.SetBorder(ADI::VelocityBorderFunction,ADI::PressureFunction,time);
     if(SIMULATION.level == LevelConfiguration::STEP || SIMULATION.level == LevelConfiguration::OBSTACLE) ADI::X_STEP_SOL.SetNeumannBorder();
     SolveADI_X_U_Step_OPENMP(gridAnt,&X_STEP_SOL,gridAnt,time);
@@ -1561,7 +1560,7 @@ void ADI::SolveADIStep(MAC* gridAnt,MAC* gridSol,double time){
     SolveADI_X_W_Step_OPENMP(gridAnt,&X_STEP_SOL,gridAnt,time);
 
 
-    time += ADI::dt/3.0;
+    time += SIMULATION.dt/3.0;
     ADI::Y_STEP_SOL.SetBorder(ADI::VelocityBorderFunction,ADI::PressureFunction,time);
     if(SIMULATION.level == LevelConfiguration::STEP || SIMULATION.level == LevelConfiguration::OBSTACLE) ADI::Y_STEP_SOL.SetNeumannBorder();
     SolveADI_Y_U_Step_OPENMP(&X_STEP_SOL,&Y_STEP_SOL,gridAnt,time);
@@ -1569,7 +1568,7 @@ void ADI::SolveADIStep(MAC* gridAnt,MAC* gridSol,double time){
     SolveADI_Y_W_Step_OPENMP(&X_STEP_SOL,&Y_STEP_SOL,gridAnt,time);
 
 
-    time += ADI::dt/3.0;
+    time += SIMULATION.dt/3.0;
     ADI::Z_STEP_SOL.SetBorder(ADI::VelocityBorderFunction,ADI::PressureFunction,time);
     if(SIMULATION.level == LevelConfiguration::STEP || SIMULATION.level == LevelConfiguration::OBSTACLE) ADI::Z_STEP_SOL.SetNeumannBorder();
     SolveADI_Z_U_Step_OPENMP(&Y_STEP_SOL,&Z_STEP_SOL,gridAnt,time);

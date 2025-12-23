@@ -3,7 +3,8 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
+                "${workspaceFolder}/src/headers/*",
+                "${workspaceFolder}/include/**",
                 "Eigen",
                 "/home/raphael/SDK/AMGX/include"
             ],

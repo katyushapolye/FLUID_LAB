@@ -1,10 +1,10 @@
 #ifndef ADI_H
 #define ADI_H
 
-#include "MAC.h"
+#include "../Core/MAC.h"
+#include "../Core/Functions.h"
+#include "../Core/Definitions.h"
 #include "Utils.h"
-#include "Functions.h"
-#include "Definitions.h"
 #include <omp.h>
 #include <Eigen/Dense>
 
@@ -84,7 +84,6 @@ private:
 
 
     static double SIG;
-    static double dt;
     static double dh;
 
     static Vec3(*VelocityBorderFunction)(double, double, double,double);

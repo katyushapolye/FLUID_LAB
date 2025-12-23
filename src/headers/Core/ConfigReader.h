@@ -94,6 +94,7 @@ namespace ConfigReader {
             return;
         }
         DIMENSION = getInt("DIMENSION", 3);
+        GPU_ACCELERATION = getInt("GPU_ACCELERATION",0);
 
         SIMULATION.GRID_SOL = new MAC();
             SIMULATION.GRID_ANT = new MAC();

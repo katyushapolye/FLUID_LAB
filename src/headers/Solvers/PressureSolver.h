@@ -1,19 +1,22 @@
 
-#include "MAC.h"
+#include "../Core/MAC.h"
+#include "../Core/Functions.h"
+#include "../Core/Definitions.h"
 #include "Utils.h"
+
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <unsupported/Eigen/CXX11/Tensor>  
 #include <Eigen/IterativeLinearSolvers>
-#include "Functions.h"
+
 
 #include <vector>
 
 
 
 
-#ifndef PRESSURE_SOLVER2D_H
-#define PRESSURE_SOLVER2D_H
+#ifndef PRESSURE_SOLVER_H
+#define PRESSURE_SOLVER_H
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::Tensor;
@@ -24,10 +27,10 @@ using Eigen::ConjugateGradient;
 typedef Eigen::Triplet<double> Triplet;
 typedef Eigen::SparseMatrix<double> SparseMatrix;
 typedef Eigen::BiCGSTAB<SparseMatrix> BiCGSTABSolver;
-class PressureSolver2D
+class PressureSolver
 {
 private:
-    static int Nx,Ny;
+    static int Nx,Ny,Nz;
     static int NON_ZERO;
     static double dt;
 
@@ -41,6 +44,7 @@ private:
 
     static CSRMatrix* PRESSURE_MATRIX;
 
+
     static AMGXSolver* AMGX_Handle;
 
 
@@ -49,7 +53,7 @@ private:
     //InDexPressure
     static VectorXd IDP;
 
-    static std::vector<Eigen::Tensor<double,2>> PRESSURE_MASK;
+    static std::vector<Eigen::Tensor<double,3>> PRESSURE_MASK;
     static Eigen::BiCGSTAB<Eigen::SparseMatrix<double>>* solver;
 
     
@@ -65,10 +69,10 @@ public:
     //takes the pressure on the grid and crrects the velocity
     static void ProjectPressure(MAC* grid);
 
-    static inline Tensor<double,2> GetPressureMask(int i,int j){ return PRESSURE_MASK[i * ((Nx))  + (j)   ];};
-    static inline void SetPressureMask(int i,int j,Tensor<double,2> value){PRESSURE_MASK[i * ((Nx))  + (j)   ] = value;};
-    static inline int GetIDP(int i,int j){ return IDP(i * ((Nx))  + (j)   );};
-    static inline void SetIDP(int i,int j,int value){IDP(i * ((Nx))  + (j)) = value;};
+    static inline Tensor<double,3> GetPressureMask(int i,int j, int k){ return PRESSURE_MASK[i * ((Nx)*(Nz))  + (j*Nz)  + k ];};
+    static inline void SetPressureMask(int i,int j, int k,Tensor<double,3> value){PRESSURE_MASK[i * ((Nx)*(Nz))  + (j*Nz)  + k ] = value;};
+    static inline int GetIDP(int i,int j, int k){ return IDP(i * ((Nx)*(Nz))  + (j*Nz)  + k );};
+    static inline void SetIDP(int i,int j, int k,int value){IDP(i * ((Nx)*(Nz))  + (j*Nz)  + k ) = value;};
 
     static int GetSolverIterations();
 
