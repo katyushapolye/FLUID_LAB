@@ -31,6 +31,7 @@ private:
     static int Nx,Ny;
     static int NON_ZERO;
     static double dt;
+    static bool needsFrameUpdate;
 
     //Pressure Matrix is stored as a COO sparse matrix for ease of use,
     //non eigen vectors because of cuda
@@ -56,9 +57,9 @@ private:
     
 public:
 
-    static void InitializePressureSolver(MAC* grid,double dt);
-    static void UpdatePressureMatrix(MAC* grid, double dt);
-
+    static void InitializePressureSolver(MAC* grid,bool frameUpdate = true); //if frameupdate is true, it will rebuild the matrix each iteration, useufl if shifting domain
+    static void UpdatePressureMatrix_Eigen(MAC* grid);
+    static void UpdatePressureMatrix_AMGX(MAC* grid);
     //solves the pressure using the velocity and puts on the grid, debug only, uses eigen to solve on CPU
     static void SolvePressure_EIGEN(MAC* gridAnt);
     static void SolvePressure_AMGX(MAC* gridAnt);

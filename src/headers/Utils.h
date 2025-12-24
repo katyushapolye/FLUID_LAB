@@ -35,6 +35,7 @@ struct CSRMatrix {
 struct AMGXSolver {
     AMGX_matrix_handle AmgxA;
     AMGX_vector_handle Amgxb, Amgxx;
+    AMGX_vector_handle Amgxguess;
     AMGX_solver_handle solver;
     AMGX_resources_handle rsrc;
     AMGX_config_handle config;
@@ -54,12 +55,11 @@ struct Vec2 {
 
 
 enum class LevelConfiguration {
-    EMPTY_LEVEL,
     LID_CAVITY,
     STEP,
     OBSTACLE,
-    ANALYTICAL,
-    PIPE,
+    DAMBREAK,
+
 };
 
 struct Domain {

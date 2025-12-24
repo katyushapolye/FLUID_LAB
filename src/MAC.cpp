@@ -1,6 +1,31 @@
 #include "headers/Core/MAC.h"
 
 
+#define FOR_EACH_2D_NON_BOUNDARY_U_FACE(code_block) \
+  for (int i = 1; i < SIMULATION.Ny-1; i++) { \
+    for (int j = 2; j < SIMULATION.Nx+1-2; j++) { \
+      code_block \
+    } \
+  }
+
+  #define FOR_EACH_2D_NON_BOUNDARY_V_FACE(code_block) \
+  for (int i = 2; i < SIMULATION.Ny+1-2; i++) { \
+    for (int j = 1; j < SIMULATION.Nx-1; j++) { \
+      code_block \
+    } \
+  }
+
+  #define FOR_EACH_2D_NON_BOUNDARY_CELL(code_block) \
+  for (int i = 1; i < SIMULATION.Ny-1; i++) { \
+    for (int j = 1; j < SIMULATION.Nx-1; j++) { \
+      code_block \
+    } \
+  }
+
+
+
+
+
 MAC::MAC()
 {
     // std::cout << "MAC Grid created -  Remember to call InitializeGrid()\n" ;
@@ -767,8 +792,38 @@ double MAC::GetGradPzAt(int i, int j)
 
 
 
+void MAC::AddAcceleration(Vec2 a,double dt){
+    //only add to fluid faces
+    FOR_EACH_2D_NON_BOUNDARY_U_FACE(
+            if(this->GetSolid(i,j-1) != SOLID_CELL && this->GetSolid(i,j) != SOLID_CELL){
+                SetU(i, j, GetU(i,j) + a.u*dt);}
+            )
+
+    FOR_EACH_2D_NON_BOUNDARY_V_FACE(
+            if(this->GetSolid(i-1,j) != SOLID_CELL && this->GetSolid(i,j) != SOLID_CELL){
+                SetV(i, j, GetV(i,j) + a.v*dt);
+            }
+    )    
+        
+
+}
 
 
+void MAC::ResetFluidCells(){
+
+    for (int i = 0; i < Ny; i++)
+    {
+        for (int j = 0; j < Nx; j++)
+        {
+            if(this->GetSolid(i,j) != SOLID_CELL ){
+                this->SetSolid(i,j,EMPTY_CELL); //resets all fluid cells to empty, keeps the solid mask intact and it is more efficient
+            }
+
+        }
+    }
+
+
+}
 
 
 
@@ -799,7 +854,6 @@ double MAC::getUatV(int i, int j)
 
 
 
-
 void MAC::SetNeumannBorder() {
     if(is2D) {
         // 2D case - no k index
@@ -823,7 +877,7 @@ void MAC::SetNeumannBorder() {
 }
 
 void MAC::SetNeumannBorderPressure() {
-    if(SIMULATION.level == LevelConfiguration::LID_CAVITY) {
+    if(SIMULATION.level == LevelConfiguration::LID_CAVITY || SIMULATION.level == LevelConfiguration::DAMBREAK) {
         if(is2D) {
             // 2D lid cavity - no k index
             for (int j = 0; j < Nx; j++) {
@@ -858,8 +912,7 @@ void MAC::SetNeumannBorderPressure() {
     }
     
     if(SIMULATION.level == LevelConfiguration::STEP || 
-       SIMULATION.level == LevelConfiguration::OBSTACLE ||
-       SIMULATION.level == LevelConfiguration::PIPE) {
+       SIMULATION.level == LevelConfiguration::OBSTACLE) {
         if(is2D) {
             // 2D step/obstacle/pipe - no k index
             for (int i = 0; i < Ny; i++) {
@@ -1240,6 +1293,10 @@ int MAC::GetFluidCellCount() {
 
 void MAC::CopyGrid(MAC &grid) {
     if(is2D) {
+        if(!grid.is2D){
+            std::cout << "ERROR - MISMATCHE GRID COPY OPERATION (3D COPIED IN 2D)";
+            return;
+        }
         // 2D case - no k index
         
         // Copy pressure and solid mask
@@ -1265,6 +1322,9 @@ void MAC::CopyGrid(MAC &grid) {
         }
     } else {
         // 3D case
+        if(grid.is2D){
+            std::cout << "ERROR - MISMATCHE GRID COPY OPERATION (2D COPIED IN 3D)";
+        }
         
         // Copy pressure and solid mask
         for (int k = 0; k < this->Nz; k++) {

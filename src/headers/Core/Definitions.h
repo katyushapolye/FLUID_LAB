@@ -21,6 +21,7 @@ struct SIMULATION_CONFIG{
 
     double RE;
     double EPS;
+    double RHO = 1.0;
 
     int Nx;
     int Ny;
@@ -30,6 +31,11 @@ struct SIMULATION_CONFIG{
     double TOLERANCE = 1E-5;
 
     bool NEEDS_COMPATIBILITY_CONDITION = false;
+
+    //FLIP
+
+    int PARTICLE_PER_CELL = 4;
+    double g = -1.0;
 
 
     Domain domain;
@@ -144,6 +150,17 @@ struct ExportSettings {
 };
 
 
+//Type parameters
+enum class SIM_TYPES {
+    ADI,
+    FLIP,
+};
+
+inline std::map<std::string, SIM_TYPES> TYPES = {
+    {"ADI", SIM_TYPES::ADI},
+    {"FLIP", SIM_TYPES::FLIP}
+};
+inline SIM_TYPES SIM_TYPE = SIM_TYPES::ADI;
 
 //Performance parameters
 inline int DIMENSION = 3;
@@ -152,12 +169,21 @@ inline int THREAD_COUNT = 4;
 inline bool ADAPTATIVE_TIMESTEP = 0;
 inline double MAX_CFL = 1.0;
 
+
+// Simulation parameters
 inline SIMULATION_CONFIG SIMULATION;
 
 
 inline SimulationTelemetry TELEMETRY;
 inline AerodynamicInformation AERODYNAMICS;
 inline ExportSettings EXPORT_SETTINGS;
+
+
+
+
+
+
+
 
 
 #endif

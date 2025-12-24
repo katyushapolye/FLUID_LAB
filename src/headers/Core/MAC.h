@@ -83,6 +83,9 @@ public:
 
     void DestroyGrid();
 
+    void AddAcceleration(Vec3 a,double dt);
+    void AddAcceleration(Vec2 a,double dt);
+    void ResetFluidCells();
     
 
     //interpolation functions

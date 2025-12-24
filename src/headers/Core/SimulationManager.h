@@ -8,6 +8,7 @@
 #include "../Solvers/ADI_2D.h"
 #include "../Solvers/PressureSolver.h"
 #include "../Solvers/PressureSolver_2D.h"
+#include "../FLIP.h"
 #include "GridVisualizer.h"
 
 class SimulationManager{
@@ -580,12 +581,12 @@ void SimulationManager::InitializeSimulation(const std::string& configFile){
               << " - Grid size: " << SIMULATION.GRID_SIZE 
               << " - Tolerance: " << SIMULATION.TOLERANCE << std::endl;
 
-    if(DIMENSION == 3){
+    if(DIMENSION == 3 && SIM_TYPE == SIM_TYPES::ADI){
 
         ADI::InitializeADI(SIMULATION.GRID_SOL, SIMULATION.dt, 
                           SIMULATION.VelocityBoundaryFunction, ZERO, 
                           SIMULATION.PressureBoundaryFunction);
-        PressureSolver::InitializePressureSolver(SIMULATION.GRID_SOL, SIMULATION.dt);
+        PressureSolver::InitializePressureSolver(SIMULATION.GRID_SOL, false);
         SIMULATION.GRID_ANT->SetBorder(SIMULATION.VelocityBoundaryFunction,SIMULATION.PressureBoundaryFunction,0);
 
         momentumStep = ADI::SolveADIStep;
@@ -598,12 +599,12 @@ void SimulationManager::InitializeSimulation(const std::string& configFile){
         }
         correctionStep = PressureSolver::ProjectPressure;
     }
-    else{
+    else if(DIMENSION == 2 && SIM_TYPE == SIM_TYPES::ADI){
 
         ADI2D::InitializeADI2D(SIMULATION.GRID_SOL, SIMULATION.dt, 
                                SIMULATION.VelocityBoundaryFunction2D, ZERO2D, 
                                SIMULATION.PressureBoundaryFunction2D);
-        PressureSolver2D::InitializePressureSolver(SIMULATION.GRID_SOL, SIMULATION.dt);
+        PressureSolver2D::InitializePressureSolver(SIMULATION.GRID_SOL,false); //do not rebuild the matrix at every iteration
         SIMULATION.GRID_ANT->SetBorder(SIMULATION.VelocityBoundaryFunction2D,SIMULATION.PressureBoundaryFunction2D,0);
 
         momentumStep = ADI2D::SolveADIStep;
@@ -617,12 +618,36 @@ void SimulationManager::InitializeSimulation(const std::string& configFile){
 
         correctionStep = PressureSolver2D::ProjectPressure;
     }
+    else if(DIMENSION == 2 && SIM_TYPE == SIM_TYPES::FLIP){
+
+        ADI2D::InitializeADI2D(SIMULATION.GRID_SOL, SIMULATION.dt, 
+                               SIMULATION.VelocityBoundaryFunction2D, ZERO2D, 
+                               SIMULATION.PressureBoundaryFunction2D);
+        PressureSolver2D::InitializePressureSolver(SIMULATION.GRID_SOL,true);
+        FLIP::InitializeFLIP(SIMULATION.GRID_SOL,SIMULATION.dt,1.0);
+        SIMULATION.GRID_ANT->SetBorder(SIMULATION.VelocityBoundaryFunction2D,SIMULATION.PressureBoundaryFunction2D,0);
+
+        momentumStep = FLIP::FLIP_Momentum;
+        if(GPU_ACCELERATION){
+            std::cout << "ERROR - AMGX IS STILL BUGGED WITH FLIP - THIS WILL PROBABLY NOT WORK!" << std::endl;;
+            pressureStep = PressureSolver2D::SolvePressure_AMGX;
+
+        }
+        else{
+              pressureStep = PressureSolver2D::SolvePressure_EIGEN;
+        }
+
+        correctionStep = FLIP::FLIP_Correction;
+        
+    }
+
+    }
 
 
 
 
     
-}
+
 
 void  SimulationManager::InitializeExportTelemetry() {
     if (EXPORT_SETTINGS.fileInitialized) return;
@@ -691,6 +716,8 @@ void  SimulationManager::InitializeExportTelemetry() {
 void SimulationManager::StepSimulation(GridVisualizer* visualizer){
     visualizer->UpdateGrid(SIMULATION.GRID_SOL);
     visualizer->Render(currentIT,currentTime,residual,lastFrameTime, isRunning,stepOnce);
+
+    SIMULATION.GRID_SOL->SetGrid(ZERO2D,ZERO2D_SCALAR,0); //set everything to zero, thisn is very important when the grid changes 
     if(ADAPTATIVE_TIMESTEP){
         advectionCFL = (SIMULATION.GRID_ANT->GetMaxVelocity() / SIMULATION.dh) * SIMULATION.dt;
         diffusionCFL = (SIMULATION.EPS * SIMULATION.dt) / (SIMULATION.dh * SIMULATION.dh);
@@ -736,6 +763,7 @@ void SimulationManager::StepSimulation(GridVisualizer* visualizer){
 
         stepOnce = false;
     }
+        
 
 
 

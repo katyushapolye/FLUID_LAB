@@ -143,8 +143,6 @@ inline int BACKWARDS_FACING_STEP_SOLID_MASK(int i, int j, int k) {
     return FLUID_CELL;
 }
 
-
-
 inline int EMPTY_SOLID_MASK(int  i,int j,int k){
      // First check for empty cell condition
      if(j == SIMULATION.Nx-1 && i != 0 && i != SIMULATION.Ny-1 && k != 0 && k != SIMULATION.Nz-1) {
@@ -156,6 +154,44 @@ inline int EMPTY_SOLID_MASK(int  i,int j,int k){
 
 
 }
+
+
+
+/*//////////////////////////////////////////////
+///////////Lid Cavity 2D ///////////////
+*///////////////////////////////////////////////
+
+
+inline int LID_CAVITY_SOLID_MASK_2D(int i,int j){
+    if(i == 0 || j == 0 ||  i == SIMULATION.Ny-1 ||  j == SIMULATION.Nx-1 ){
+        return SOLID_CELL;
+    }
+    else{
+
+
+        return FLUID_CELL;
+    }
+}
+
+inline Vec2 LID_CAVITY_FLOW_2D(double x, double y,double t){
+    Vec2 r;
+    r.u = 0.0;
+    r.v = 0.0;
+    if(y >= 1.0 - (SIMULATION.dh*0.55)){
+        r.u = 1.0;
+    }
+
+
+    return r;
+
+}
+
+inline double LID_CAVITY_FLOW_PRESSURE_2D(double x, double y,double t){
+
+    return 0.0;
+
+}
+
 
 /*//////////////////////////////////////////////
 ///////////Backwards Facing Step 2D ///////////////
@@ -323,6 +359,61 @@ inline int OBSTACLE_SOLID_MASK_2D(int  i,int j){
 
 
 
+}
+
+
+
+/*//////////////////////////////////////////////
+///////////////////DAMBREAK 2/////////////////////
+*///////////////////////////////////////////////
+
+inline Vec2 DAMBREAK_FONT_2D(double x, double y,double t){
+    Vec2 r;
+    r.u = SIMULATION.g;
+
+    //if(y >= 1.0 - (SIMULATION.dh*1.55)){
+    //    r.u = 1.0;
+    //}
+
+
+    return r;
+
+}
+
+inline Vec2 DAMBREAK_BORDER_2D(double x, double y,double t){
+    Vec2 r;
+    r.u = 0.0;
+    r.v = 0.0;
+    //if(y >= 1.0 - (SIMULATION.dh*1.55)){
+    //    r.u = 1.0;
+    //}
+
+
+    return r;
+
+}
+
+inline double DAMBREAK_PRESSURE_2D(double x, double y,double t){
+
+    return 0.0;
+
+}
+
+inline int DAMBREAK_SOLID_MASK_2D(int i,int j){
+    double dh = SIMULATION.dh;
+    double radius = 0.05;
+    //if(pow((j*dh - 0.5),2) +pow((i*dh - 0.5),2)  < radius*radius){
+    //    return SOLID_CELL;
+    //}
+
+
+
+    if(i == 0 || j == 0  || i == SIMULATION.Ny-1 ||  j == SIMULATION.Nx-1){
+        return SOLID_CELL;
+    }
+    else{
+        return FLUID_CELL;
+    }
 }
 
 #endif

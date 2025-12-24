@@ -1,6 +1,5 @@
 config_version=2
-solver=FGMRES
-gmres_n_restart=80
+solver=PCG
 max_iters=2500
 norm=L2
 convergence=RELATIVE_INI_CORE
@@ -13,5 +12,5 @@ amg_solver:presweeps=1
 amg_solver:postsweeps=1
 amg_solver:cycle=V
 print_solve_stats=0
-print_grid_stats=0
+print_grid_stats=0z
 obtain_timings=0

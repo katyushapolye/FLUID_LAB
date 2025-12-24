@@ -128,19 +128,16 @@ void free_csr_matrix(CSRMatrix* csr) {
 
 
 std::string LevelConfigurationToString(LevelConfiguration config) {
-    if(config == LevelConfiguration::LID_CAVITY) {
+    switch(config) {
+    case LevelConfiguration::LID_CAVITY:
         return "CAVITY";
-    }
-    if(config == LevelConfiguration::STEP) {
+    case LevelConfiguration::STEP:
         return "STEP";
-    }
-    if(config == LevelConfiguration::OBSTACLE) {
+    case LevelConfiguration::OBSTACLE:
         return "OBSTACLE";
-    }
-    if(config == LevelConfiguration::ANALYTICAL) {
-        return "OBSTACLE";
-    }
-    else {
+    case LevelConfiguration::DAMBREAK:
+        return "DAMBREAK";
+    default:
         printf("INVALID LEVEL CONFIG - CHECK LEVEL FUNCTION \n");
         return "EMPTY";
     }

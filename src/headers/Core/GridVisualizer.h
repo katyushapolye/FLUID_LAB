@@ -2,6 +2,7 @@
 #define GRID_VISUALIZER_H
 
 #include "MAC.h"
+#include "../FLIP.h"
 
 #include <imgui.h>
 #include <implot.h>
@@ -52,8 +53,8 @@ private:
     float baseSize = 12.0f;
     ImPlotQuiverFlags quiverFlags = ImPlotQuiverFlags_Colored | ImPlotQuiverFlags_Normalize;
     ImPlot3DQuiverFlags quiver3DFlags = ImPlot3DQuiverFlags_Colored | ImPlot3DQuiverFlags_Normalize;
-    ImPlotColormap colormap = ImPlotColormap_Viridis;
-    ImPlot3DColormap colormap3D = ImPlot3DColormap_Viridis;
+    ImPlotColormap colormap = ImPlotColormap_Jet;
+    ImPlot3DColormap colormap3D = ImPlotColormap_Jet;
     
     // Heatmap data (for scalar fields)
     std::vector<double> heatmapData;
@@ -74,6 +75,7 @@ private:
     int GetNz() const { return (DIMENSION == 2) ? 1 : grid3D->Nz; }
 
     void RenderTelemetryUI();
+    void RenderParticles();
     void RenderControlUI(int IT, double time, double residual, double frameTime, bool& simulationRunning, bool& stepOnce);
     void RenderExportUI();
     void RenderAerodynamicsUI();
@@ -1089,6 +1091,51 @@ if (DIMENSION == 3 && !quiver3DX.empty()) {
     this->RenderTelemetryUI();
     this->RenderAerodynamicsUI();
     this->RenderExportUI();
+    this->RenderParticles();
+}
+
+
+void GridVisualizer::RenderParticles(){
+    /*
+    if (ImPlot::BeginPlot("Scatter Plot")) {
+        ImPlot::PlotScatter("Data 1", xs1, ys1, 100);
+        ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
+        ImPlot::SetNextMarkerStyle(ImPlotMarker_Square, 6, ImPlot::GetColormapColor(1), IMPLOT_AUTO, ImPlot::GetColormapColor(1));
+        ImPlot::PlotScatter("Data 2", xs2, ys2, 50);
+        ImPlot::PopStyleVar();
+        ImPlot::EndPlot();
+    }
+    */
+
+    if(FLIP::particleCount > 0){
+        static float *xs, *ys;
+        xs = new float[FLIP::particleCount];
+        ys = new float[FLIP::particleCount];
+        for(int p = 0;p < FLIP::particleCount;p++){
+            xs[p] = FLIP::particles[p].x;
+            ys[p]  = FLIP::particles[p].y;
+        }
+
+        float width = 1.0f, height = 1.0f;
+        float aspectRatio = width / height;
+        float baseHeight = 600.0f;
+        float plotHeight = baseHeight;
+        float plotWidth  = plotHeight * aspectRatio;
+        if (ImPlot::BeginPlot("Scatter Plot",ImVec2(plotWidth,plotHeight))) {
+            ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle,1.0);
+            ImPlot::SetupAxisLimits(ImAxis_X1,0.0,1.0);
+            ImPlot::SetupAxisLimits(ImAxis_Y1,0.0,1.0);
+
+            ImPlot::PlotScatter("Particles", xs, ys, FLIP::particleCount);
+
+            ImPlot::EndPlot();
+        }
+
+        delete[] xs;
+        delete[] ys;
+    }
+
+
 }
 
 void GridVisualizer::RenderControlUI(int IT,  double time, double residual, double frameTime, bool& simulationRunning, bool& stepOnce) {
@@ -1205,9 +1252,18 @@ void GridVisualizer::RenderTelemetryUI()
     }
     ImGui::SameLine();
     
-    if (ImPlot::BeginPlot("Performance (CPU vs GPU)", plot_size)) {
+    std::string plotTitle = "Performance (CPU vs " + std::string(GPU_ACCELERATION ? "GPU)" : "CPU)");
+    if (ImPlot::BeginPlot(plotTitle.c_str(), plot_size)) {
         double xs[] = {0.0, 1.0};
-        static const char* labels[] = {"ADI (CPU)", "Pressure (GPU)"};
+
+        static std::string label =
+            "Pressure (" + std::string(GPU_ACCELERATION ? "GPU)" : "CPU)");
+    
+        static const char* labels[] = {
+            "ADI (CPU)",
+            label.c_str()
+        };
+    
         double values[] = {
             TELEMETRY.cpu_time.back(),
             TELEMETRY.gpu_time.back()

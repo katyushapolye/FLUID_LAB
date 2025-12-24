@@ -12,6 +12,8 @@
 #include "headers/Solvers/ADI_2D.h"
 #include "headers/Solvers/PressureSolver.h"
 #include "headers/Solvers/PressureSolver_2D.h"
+#include "headers/FLIP.h"
+
 
 #include "headers/Core/SimulationManager.h"
 
@@ -41,6 +43,7 @@ int main(int argc, char *argv[])
 
     SimulationManager::InitializeSimulation();
     SimulationManager::InitializeExportTelemetry();
+
     
     // Initialize GLFW
     if (!glfwInit()) {
@@ -106,7 +109,11 @@ int main(int argc, char *argv[])
         ImGui::NewFrame();
         
 
+
+
         SimulationManager::StepSimulation(visualizer);
+
+
         
         // Rendering
         ImGui::Render();

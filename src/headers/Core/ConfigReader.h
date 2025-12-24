@@ -96,6 +96,7 @@ namespace ConfigReader {
         DIMENSION = getInt("DIMENSION", 3);
         GPU_ACCELERATION = getInt("GPU_ACCELERATION",0);
         THREAD_COUNT = getInt("THREAD_COUNT",4);
+        SIM_TYPE = TYPES[getString("TYPE","ADI")];
 
 
         ADAPTATIVE_TIMESTEP = getInt("ADAPTATIVE_TIMESTEP",0);
@@ -145,15 +146,15 @@ namespace ConfigReader {
             else if (levelType == "OBSTACLE"){
                 SIMULATION.level = LevelConfiguration::OBSTACLE;
             }
-            else if (levelType == "ANALYTICAL"){
-                SIMULATION.level = LevelConfiguration::OBSTACLE;
+            else if (levelType == "DAMBREAK"){
+                SIMULATION.level = LevelConfiguration::DAMBREAK;
             }
             else {
                 std::cerr << "Warning: Unknown level type '" << levelType << "'. Using default." << std::endl;
             }
 
         
-        if(DIMENSION == 3){
+        if(DIMENSION == 3 && SIM_TYPE == SIM_TYPES::ADI){
             
 
             // Level geometry, boundary functions.
@@ -182,7 +183,7 @@ namespace ConfigReader {
             SIMULATION.GRID_ANT->SetGrid(ZERO,ZERO_SCALAR,0);
         }
 
-        else{
+        else if(DIMENSION == 2  && SIM_TYPE == SIM_TYPES::ADI){
 
 
             if (SIMULATION.level == LevelConfiguration::STEP) {
@@ -194,6 +195,13 @@ namespace ConfigReader {
                     SIMULATION.SolidMaskFunction2D = OBSTACLE_SOLID_MASK_2D;
                     SIMULATION.VelocityBoundaryFunction2D = OBSTACLE_FLOW_2D;
                     SIMULATION.PressureBoundaryFunction2D = OBSTACLE_FLOW_PRESSURE_2D;
+
+            }
+
+            else if(SIMULATION.level == LevelConfiguration::LID_CAVITY){
+                    SIMULATION.SolidMaskFunction2D = LID_CAVITY_SOLID_MASK_2D;
+                    SIMULATION.VelocityBoundaryFunction2D = LID_CAVITY_FLOW_2D;
+                    SIMULATION.PressureBoundaryFunction2D = LID_CAVITY_FLOW_PRESSURE_2D;
 
             }
             else{
@@ -209,6 +217,27 @@ namespace ConfigReader {
             SIMULATION.GRID_ANT->SetGrid(ZERO2D,ZERO2D_SCALAR,0);
 
         }
+
+        else if(DIMENSION == 2 && SIM_TYPE == SIM_TYPES::FLIP){
+             if (SIMULATION.level == LevelConfiguration::DAMBREAK) {
+                    SIMULATION.SolidMaskFunction2D = DAMBREAK_SOLID_MASK_2D;
+                    SIMULATION.VelocityBoundaryFunction2D = DAMBREAK_BORDER_2D;
+                    SIMULATION.PressureBoundaryFunction2D = DAMBREAK_PRESSURE_2D;
+             }
+
+            else{
+                printf("FAILED LEVEL ASSERTION!\n");
+
+            }
+
+            SIMULATION.GRID_SOL->SetLevelGeometry(SIMULATION.SolidMaskFunction2D);
+            SIMULATION.GRID_ANT->SetLevelGeometry(SIMULATION.SolidMaskFunction2D);
+
+            SIMULATION.GRID_SOL->SetGrid(ZERO2D,ZERO2D_SCALAR,0);
+            SIMULATION.GRID_ANT->SetGrid(ZERO2D,ZERO2D_SCALAR,0);
+        }
+
+        std::cout << "Simulation config finished!" << std::endl;
     }
 };
 #endif

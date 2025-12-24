@@ -518,7 +518,7 @@ void ADI2D::SolveADIStep(MAC* gridAnt,MAC* gridSol,double time){
  
     time += SIMULATION.dt/2.0;
     ADI2D::X_STEP_SOL.SetBorder(ADI2D::VelocityBorderFunction,ADI2D::PressureFunction,time);
-    if(SIMULATION.level == LevelConfiguration::STEP || SIMULATION.level == LevelConfiguration::OBSTACLE ||  SIMULATION.level == LevelConfiguration::PIPE) ADI2D::X_STEP_SOL.SetNeumannBorder();
+    if(SIMULATION.level == LevelConfiguration::STEP || SIMULATION.level == LevelConfiguration::OBSTACLE ) ADI2D::X_STEP_SOL.SetNeumannBorder();
     SolveADI_X_U_Step_OPENMP(gridAnt,&X_STEP_SOL,gridAnt,time);
     SolveADI_X_V_Step_OPENMP(gridAnt,&X_STEP_SOL,gridAnt,time);
 
@@ -526,7 +526,7 @@ void ADI2D::SolveADIStep(MAC* gridAnt,MAC* gridSol,double time){
 
     time += SIMULATION.dt/2.0;
     ADI2D::Y_STEP_SOL.SetBorder(ADI2D::VelocityBorderFunction,ADI2D::PressureFunction,time);
-    if(SIMULATION.level == LevelConfiguration::STEP || SIMULATION.level == LevelConfiguration::OBSTACLE ||  SIMULATION.level == LevelConfiguration::PIPE) ADI2D::Y_STEP_SOL.SetNeumannBorder();
+    if(SIMULATION.level == LevelConfiguration::STEP || SIMULATION.level == LevelConfiguration::OBSTACLE ) ADI2D::Y_STEP_SOL.SetNeumannBorder();
     SolveADI_Y_U_Step_OPENMP(&X_STEP_SOL,&Y_STEP_SOL,gridAnt,time);
     SolveADI_Y_V_Step_OPENMP(&X_STEP_SOL,&Y_STEP_SOL,gridAnt,time);
 
