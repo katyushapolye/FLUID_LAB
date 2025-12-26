@@ -15,7 +15,7 @@ using Eigen::VectorXd;
 #define MAC_H
 
 
-//All functions are overloaded to 2D and 3D
+//All (sensible) functions are overloaded to 2D and 3D, those who are not (no parameters) do the check themselves 
 
 class MAC
 {

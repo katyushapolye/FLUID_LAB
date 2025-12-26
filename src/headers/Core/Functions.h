@@ -364,7 +364,7 @@ inline int OBSTACLE_SOLID_MASK_2D(int  i,int j){
 
 
 /*//////////////////////////////////////////////
-///////////////////DAMBREAK 2/////////////////////
+///////////////////DAMBREAK 2D/////////////////////
 *///////////////////////////////////////////////
 
 inline Vec2 DAMBREAK_FONT_2D(double x, double y,double t){
@@ -409,6 +409,51 @@ inline int DAMBREAK_SOLID_MASK_2D(int i,int j){
 
 
     if(i == 0 || j == 0  || i == SIMULATION.Ny-1 ||  j == SIMULATION.Nx-1){
+        return SOLID_CELL;
+    }
+    else{
+        return FLUID_CELL;
+    }
+}
+
+
+/*//////////////////////////////////////////////
+///////////////////DAMBREAK 3D/////////////////////
+*///////////////////////////////////////////////
+
+inline Vec3 DAMBREAK_FONT(double x, double y, double z, double t){
+    Vec3 r;
+    r.u = 0.0;
+    r.v = SIMULATION.g;
+    r.w = 0.0;
+    //if(y >= 1.0 - (SIMULATION.dh*1.55)){
+    //    r.u = 1.0;
+    //}
+    return r;
+}
+
+inline Vec3 DAMBREAK_BORDER(double x, double y, double z, double t){
+    Vec3 r;
+    r.u = 0.0;
+    r.v = 0.0;
+    r.w = 0.0;
+    //if(y >= 1.0 - (SIMULATION.dh*1.55)){
+    //    r.u = 1.0;
+    //}
+    return r;
+}
+
+inline double DAMBREAK_PRESSURE(double x, double y, double z, double t){
+    return 0.0;
+}
+
+inline int DAMBREAK_SOLID_MASK(int i, int j, int k){
+    double dh = SIMULATION.dh;
+    double radius = 0.05;
+    //if(pow((j*dh - 0.5),2) + pow((i*dh - 0.5),2) + pow((k*dh - 0.5),2) < radius*radius){
+    //    return SOLID_CELL;
+    //}
+    if(i == 0 || j == 0 || k == 0 || i == SIMULATION.Ny-1 || j == SIMULATION.Nx-1 || k == SIMULATION.Nz-1){
         return SOLID_CELL;
     }
     else{

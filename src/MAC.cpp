@@ -22,7 +22,45 @@
     } \
   }
 
+// 3D Macros for looping over non-boundary faces and cells
+#define FOR_EACH_3D_NON_BOUNDARY_U_FACE(code_block) \
+  for (int i = 1; i < SIMULATION.Ny-1; i++) { \
+    for (int j = 2; j < SIMULATION.Nx+1-2; j++) { \
+      for (int k = 1; k < SIMULATION.Nz-1; k++) { \
+        code_block \
+      } \
+    } \
+  }
 
+
+#define FOR_EACH_3D_NON_BOUNDARY_V_FACE(code_block) \
+  for (int i = 2; i < SIMULATION.Ny+1-2; i++) { \
+    for (int j = 1; j < SIMULATION.Nx-1; j++) { \
+      for (int k = 1; k < SIMULATION.Nz-1; k++) { \
+        code_block \
+      } \
+    } \
+  }
+
+
+#define FOR_EACH_3D_NON_BOUNDARY_W_FACE(code_block) \
+  for (int i = 1; i < SIMULATION.Ny-1; i++) { \
+    for (int j = 1; j < SIMULATION.Nx-1; j++) { \
+      for (int k = 2; k < SIMULATION.Nz+1-2; k++) { \
+        code_block \
+      } \
+    } \
+  }
+
+
+#define FOR_EACH_3D_NON_BOUNDARY_CELL(code_block) \
+  for (int i = 1; i < SIMULATION.Ny-1; i++) { \
+    for (int j = 1; j < SIMULATION.Nx-1; j++) { \
+      for (int k = 1; k < SIMULATION.Nz-1; k++) { \
+        code_block \
+      } \
+    } \
+  }
 
 
 
@@ -422,6 +460,8 @@ double MAC::GetDivergencyAt(int i, int j, int k)
     return (divU + divV + divW);
 }
 
+
+
 // be careful to not try to get the gradient on bondary nodes!
 double MAC::GetGradPxAt(int i, int j, int k)
 {
@@ -490,6 +530,28 @@ double MAC::getVatW(int i, int j, int k)
     return (top + botton) / 2.0;
 };
 
+
+
+
+void MAC::AddAcceleration(Vec3 a,double dt){
+
+    FOR_EACH_3D_NON_BOUNDARY_U_FACE(
+        if(this->GetSolid(i,j-1,k) != SOLID_CELL && this->GetSolid(i,j,k) != SOLID_CELL){
+                SetU(i, j,k, GetU(i,j,k) + a.u*dt);}
+    )
+    FOR_EACH_3D_NON_BOUNDARY_V_FACE(
+        if(this->GetSolid(i-1,j,k) != SOLID_CELL && this->GetSolid(i,j,k) != SOLID_CELL){
+                SetV(i, j,k, GetV(i,j,k) + a.v*dt);}
+    )
+
+    FOR_EACH_3D_NON_BOUNDARY_W_FACE(
+        if(this->GetSolid(i,j,k-1) != SOLID_CELL && this->GetSolid(i,j,k) != SOLID_CELL){
+                SetW(i, j,k, GetW(i,j,k) + a.w*dt);}
+    )
+
+
+
+}
 
 
 
@@ -809,8 +871,11 @@ void MAC::AddAcceleration(Vec2 a,double dt){
 }
 
 
+
+
 void MAC::ResetFluidCells(){
 
+    if(is2D){
     for (int i = 0; i < Ny; i++)
     {
         for (int j = 0; j < Nx; j++)
@@ -819,6 +884,21 @@ void MAC::ResetFluidCells(){
                 this->SetSolid(i,j,EMPTY_CELL); //resets all fluid cells to empty, keeps the solid mask intact and it is more efficient
             }
 
+        }
+    }
+    }
+    else{
+        for (int i = 0; i < Ny; i++)
+        {
+            for (int j = 0; j < Nx; j++)
+            {
+                for(int k = 0;k<Nz;k++){
+                if(this->GetSolid(i,j,k) != SOLID_CELL ){
+                    this->SetSolid(i,j,k,EMPTY_CELL); //resets all fluid cells to empty, keeps the solid mask intact and it is more efficient
+                }
+                }
+
+            }
         }
     }
 

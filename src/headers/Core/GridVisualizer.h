@@ -2,8 +2,8 @@
 #define GRID_VISUALIZER_H
 
 #include "MAC.h"
-#include "../FLIP.h"
-
+#include "../Solvers/FLIP.h"
+#include "../Solvers/FLIP3D.h"
 #include <imgui.h>
 #include <implot.h>
 #include <implot3d.h>
@@ -11,16 +11,16 @@
 #include <string>
 #include <cmath>
 
-// Declare external global variable for dimension
-extern int DIMENSION;
+//Honestly, this code is basically a monolith, its mainly ImGUI and ImPlots code to plot everything of the grid and simulation telemetry.
+
 
 class GridVisualizer {
 private:
     MAC* grid3D;
     MAC* grid2D;
     
-    // UI state
-    int selectedComponent = 1;  // 0=velocity, 1=u, 2=v, 3=w (3D only), 4=p, 5=solid, 6=divergence, 7=magnitude
+    //UI state
+    int selectedComponent = 7;  // 0=velocity, 1=u, 2=v, 3=w (3D only), 4=p, 5=solid, 6=divergence, 7=magnitude
     int slicePlane = 0;         // 0=XY, 1=XZ (3D only), 2=YZ (3D only)
     int sliceIndex = 0;
     bool autoScale = true;
@@ -31,16 +31,19 @@ private:
 
     bool twoDimension = true;
     
-    // Zoom and pan state
+
     float zoomLevel = 1.0f;
+
+    double start;
+    double end;
     
-    // Quiver plot data (2D)
+
     std::vector<float> quiverX;
     std::vector<float> quiverY;
     std::vector<float> quiverU;
     std::vector<float> quiverV;
     
-    // Quiver plot data (3D)
+
     std::vector<float> quiver3DX;
     std::vector<float> quiver3DY;
     std::vector<float> quiver3DZ;
@@ -49,14 +52,14 @@ private:
     std::vector<float> quiver3DW;
     int stride = 1; // 1 means show every cell, 2 means every other cell, etc.
     
-    // Quiver plot settings
+
     float baseSize = 12.0f;
     ImPlotQuiverFlags quiverFlags = ImPlotQuiverFlags_Colored | ImPlotQuiverFlags_Normalize;
     ImPlot3DQuiverFlags quiver3DFlags = ImPlot3DQuiverFlags_Colored | ImPlot3DQuiverFlags_Normalize;
     ImPlotColormap colormap = ImPlotColormap_Jet;
     ImPlot3DColormap colormap3D = ImPlotColormap_Jet;
     
-    // Heatmap data (for scalar fields)
+
     std::vector<double> heatmapData;
     int heatmapRows = 0;
     int heatmapCols = 0;
@@ -69,7 +72,7 @@ private:
     void ExtractQuiver3DData();
     void ComputeMinMax();
     
-    // Helper methods to get grid dimensions
+
     int GetNx() const { return (DIMENSION == 2) ? grid2D->Nx : grid3D->Nx; }
     int GetNy() const { return (DIMENSION == 2) ? grid2D->Ny : grid3D->Ny; }
     int GetNz() const { return (DIMENSION == 2) ? 1 : grid3D->Nz; }
@@ -91,7 +94,6 @@ public:
 
 };
 
-// Implementation
 GridVisualizer::GridVisualizer(MAC* gridPtr) : grid3D(gridPtr), grid2D(nullptr) {
     if(gridPtr->is2D){
 
@@ -701,6 +703,7 @@ void GridVisualizer::ExtractSliceData() {
 void GridVisualizer::Render(int IT,  double time, double residual, double frameTime, bool& simulationRunning, bool& stepOnce) {
     if ((DIMENSION == 2 && !grid2D) || (DIMENSION == 3 && !grid3D)) return;
     
+    start = GetWallTime();
     ImGui::Begin("Grid Visualizer", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     
     if (ImGui::BeginTabBar("VisualizationTabs")) {
@@ -1046,7 +1049,7 @@ void GridVisualizer::Render(int IT,  double time, double residual, double frameT
         ImGui::End();
     } else {
 // 3D Volume Visualization
-if (DIMENSION == 3 && !quiver3DX.empty()) {
+    if (DIMENSION == 3 && !quiver3DX.empty()) {
     ImGui::Begin("3D Visualization", nullptr, ImGuiWindowFlags_NoScrollbar);
     ImPlot::PushColormap(colormap3D);
     ImPlot3D::PushColormap(colormap3D);
@@ -1087,11 +1090,13 @@ if (DIMENSION == 3 && !quiver3DX.empty()) {
 }
 
 
-    this->RenderControlUI(IT,time,residual,frameTime,simulationRunning,stepOnce);
+
     this->RenderTelemetryUI();
     this->RenderAerodynamicsUI();
     this->RenderExportUI();
     this->RenderParticles();
+        end = GetWallTime();
+    this->RenderControlUI(IT,time,residual,frameTime,simulationRunning,stepOnce);
 }
 
 
@@ -1106,6 +1111,7 @@ void GridVisualizer::RenderParticles(){
         ImPlot::EndPlot();
     }
     */
+   if(DIMENSION == 2){
 
     if(FLIP::particleCount > 0){
         static float *xs, *ys;
@@ -1134,6 +1140,52 @@ void GridVisualizer::RenderParticles(){
         delete[] xs;
         delete[] ys;
     }
+    }
+
+   if(DIMENSION == 3){
+
+    if(FLIP3D::particleCount > 0){
+
+        static int stride = 2; 
+        ImGui::SliderInt("Particle Stride", &stride, 1, 100);
+        
+        
+        int sampledCount = (FLIP3D::particleCount + stride - 1) / stride;
+        float *xs, *ys, *zs;
+        xs = new float[sampledCount];
+        ys = new float[sampledCount];
+        zs = new float[sampledCount];
+        
+        int sampleIndex = 0;
+        for(int p = 0; p < FLIP3D::particleCount; p += stride){
+            xs[sampleIndex] = FLIP3D::particles[p].x;
+            ys[sampleIndex] = FLIP3D::particles[p].y;
+            zs[sampleIndex] = FLIP3D::particles[p].z;
+            sampleIndex++;
+        }
+        
+        float width = 1.0f, height = 1.0f;
+        float aspectRatio = width / height;
+        float baseHeight = 600.0f;
+        float plotHeight = baseHeight;
+        float plotWidth = plotHeight * aspectRatio;
+        
+        if (ImPlot3D::BeginPlot("Scatter Plot", ImVec2(plotWidth, plotHeight))) {
+            ImPlot3D::SetNextMarkerStyle(ImPlot3DMarker_Square, 1.0);
+            ImPlot3D::SetupAxisLimits(ImAxis3D_X, 0.0, 1.0);
+            ImPlot3D::SetupAxisLimits(ImAxis3D_Y, 0.0, 1.0);
+            ImPlot3D::SetupAxisLimits(ImAxis3D_Z, 0.0, 1.0);
+            ImPlot3D::PlotScatter("Particles", xs, zs, ys, sampledCount);
+            ImPlot3D::EndPlot();
+        }
+        
+        delete[] xs;
+        delete[] ys;
+        delete[] zs;
+}
+
+
+}
 
 
 }
@@ -1145,11 +1197,13 @@ void GridVisualizer::RenderControlUI(int IT,  double time, double residual, doub
     ImGui::Text("Time: %.4f", time);
     ImGui::Text("Residual: %.8f", residual);
     ImGui::Text("Timestep: %.8f", SIMULATION.dt);
+    
     ImGui::Text("Divergence: %.6e", SIMULATION.GRID_SOL->GetDivSum());
 
     
     
     ImGui::Text("Frame Time: %.8f ms", frameTime * 1000.0);
+    ImGui::Text("Draw Time: %.8f ms", (end-start)* 1000.0);
     
     if (simulationRunning) {
         ImGui::Text("Status: Running");
@@ -1290,6 +1344,9 @@ void GridVisualizer::RenderTelemetryUI()
 }
 
 void GridVisualizer::RenderAerodynamicsUI() {
+    if(SIMULATION.level != LevelConfiguration::OBSTACLE){
+        return;
+    }
     ImGui::Begin("Aerodynamics Telemetry");
 
     const double t = TELEMETRY.time.back();
@@ -1545,6 +1602,7 @@ void GridVisualizer::RenderAerodynamicsUI() {
     }
     
     ImGui::End();
+
 }
 
 void GridVisualizer::RenderExportUI() {
@@ -1564,6 +1622,9 @@ void GridVisualizer::RenderExportUI() {
         ImGui::Separator();
         ImGui::Text("Grid Export");
         ImGui::Checkbox("Export Grid (VTK)", &EXPORT_SETTINGS.exportGridData);
+        if(SIM_TYPE == SIM_TYPES::FLIP){
+            ImGui::Checkbox("Export Particles (CSV)", &EXPORT_SETTINGS.exportParticleData);
+        }
         
         ImGui::Separator();
         ImGui::Text("Simulation Telemetry");

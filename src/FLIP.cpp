@@ -1,5 +1,5 @@
-#include "headers/FLIP.h"
-#include "Solvers/PressureSolver_2D.h"
+#include "headers/Solvers/FLIP.h"
+#include "headers/Solvers/PressureSolver_2D.h"
 
 int FLIP::particleCount = 0;
 int FLIP::maxParticle = 0;
@@ -90,6 +90,10 @@ void FLIP::ExportParticles(int IT)
 {
     std::string exportPath = "Exports/FLIP/particles_" + std::to_string(IT) + ".csv";
     std::ofstream outFile(exportPath);
+    if(!outFile.is_open()){
+        std::cout << "FLIP EXPORT FAILED!" << std::endl;
+    }
+
 
     // Write header
     outFile << "x,y,u,v" << std::endl;

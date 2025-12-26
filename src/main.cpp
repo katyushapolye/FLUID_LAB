@@ -12,7 +12,7 @@
 #include "headers/Solvers/ADI_2D.h"
 #include "headers/Solvers/PressureSolver.h"
 #include "headers/Solvers/PressureSolver_2D.h"
-#include "headers/FLIP.h"
+#include "headers/Solvers/FLIP.h"
 
 
 #include "headers/Core/SimulationManager.h"
@@ -29,10 +29,12 @@
 
 
 //what to do
-//continue this, we now only haave on simulation and one mac, so it should make it simpler
-//tomorrow, add 3 morre configs with the creation of the simulation manager
-// FIX ADI DIFFUSION MATRIX ON THE ADAPTATIVE TIMESTEPPING
-//visualization manaage, that handles all the UI stuff (mege grid visualizer into it)
+//investigate the v velocity at the top of the doman in flip, not really a very bad bug and doesnt really make a differnce, just seems weird. happens on both 2d and 3d
+//Add strohal number and frequency to the aerodynamics telemetry
+// add ADI difusion to flip, which means altering ADI to take into account empty cells, the same way we consider the solid mask for ease
+//actually start compiling results 
+// paralelize FLIP3D
+
 
 int main(int argc, char *argv[])
 {

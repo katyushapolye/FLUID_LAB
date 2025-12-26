@@ -1,4 +1,4 @@
-#include "Core/MAC.h"
+#include "../Core/MAC.h"
 #include "Utils.h"
 #include "Core/Functions.h"
 
@@ -49,6 +49,7 @@ class FLIP{
     static void InitializeFLIP(MAC* grid,double dt,double alpha =1.0);
     static void FLIP_StepBeforeProjection(MAC* grid,double dt);
     static void FLIP_StepAfterProjection(MAC* grid,double dt);
+    static void ExportParticles(int IT);
     //wrapper functions for the manager
     static void FLIP_Momentum(MAC* gridAnt,MAC* gridSol, double time);
     static void FLIP_Pressure(MAC* grid);
@@ -67,7 +68,7 @@ class FLIP{
     static void ReseedParticles(MAC* grid);
 
 
-    static void ExportParticles(int IT);
+
 
     static void ParticleToGrid(MAC* grid);
     static void GridToParticle(MAC* grid);

@@ -7,6 +7,7 @@
 
 
 
+//empty cell might just as well be outflow
 #define FLUID_CELL  0
 #define SOLID_CELL  1
 #define EMPTY_CELL  2
@@ -144,6 +145,8 @@ struct ExportSettings {
     
     // Grid export
     bool exportGridData = false;
+    // Particle export
+    bool exportParticleData = false;
     
     std::ofstream telemetryFile;
     bool fileInitialized = false;
