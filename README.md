@@ -15,13 +15,13 @@ This project provides three distinct fluid simulation approaches, each optimized
   
 Validation Test Cases
 
-ADI(3D/2D) Eulerian (Gasses) Solver:
+ADI(3D/2D) Eulerian Solver:
  - Lid-Driven Cavity Flow [1]
  - Flow Past Obstacle (Wind tunnel with sphere/circle) [2]
  - Backward-Facing Step [3]
 
    
-FLIP(3D/2D) & SPH(2D) (Liquid) Solvers:
+FLIP(3D/2D)[4] & SPH(2D)[5] Solvers:
  - Dam Break scenario
 
 
@@ -41,9 +41,14 @@ Interface:
 
 References:
 
-[1] - Ghia, U. K. N. G., Ghia, K. N., & Shin, C. T. "High-Re solutions for incompressible flow using the Navier-Stokes equations and a multigrid method" (1982.)
+[1] - Ghia, U. K. N. G., Ghia, K. N., & Shin, C. T. "High-Re solutions for incompressible flow using the Navier-Stokes equations and a multigrid method" (1982.).
 
-[2] - Schäfer, Michael, et al. "Benchmark computations of laminar flow around a cylinder." (1996.)
+[2] - Schäfer, Michael, et al. "Benchmark computations of laminar flow around a cylinder." (1996.).
 
-[3] - Armaly, Bassem F., et al. "Experimental and theoretical investigation of backward-facing step flow." (1983)\n
+[3] - Armaly, Bassem F., et al. "Experimental and theoretical investigation of backward-facing step flow." (1983.).
+
+[4] - Brackbill, Jeremiah U., Douglas B. Kothe, and Hans M. Ruppel. "FLIP: a low-dissipation, particle-in-cell method for fluid flow." (1988.).
+
+[5] - Müller, Matthias, David Charypar, and Markus Gross. "Particle-based fluid simulation for interactive applications." (2003.).
+
 
