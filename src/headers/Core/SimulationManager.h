@@ -4,12 +4,13 @@
 #include <iostream>
 #include "MAC.h"
 #include "ConfigReader.h"
-#include "../Solvers/ADI.h"
-#include "../Solvers/ADI_2D.h"
-#include "../Solvers/PressureSolver.h"
-#include "../Solvers/PressureSolver_2D.h"
-#include "../Solvers/FLIP.h"
+#include "../Solvers/ADI3D.h"
+#include "../Solvers/ADI2D.h"
+#include "../Solvers/PressureSolver3D.h"
+#include "../Solvers/PressureSolver2D.h"
+#include "../Solvers/FLIP2D.h"
 #include "../Solvers/FLIP3D.h"
+#include "../Solvers/SPH2D.h"
 #include "GridVisualizer.h"
 
 class SimulationManager{
@@ -76,8 +77,15 @@ double          SimulationManager::advectionCFL = 0.0;
 double          SimulationManager::residual = 0.0;
 
 void SimulationManager::UpdateTelemetry(){
-    advectionCFL = (SIMULATION.GRID_SOL->GetMaxVelocity() / SIMULATION.dh) * SIMULATION.dt;
-    diffusionCFL = (SIMULATION.EPS* SIMULATION.dt) / (SIMULATION.dh*SIMULATION.dh);
+    if(SIM_TYPE != SIM_TYPES::SPH){
+        advectionCFL = (SIMULATION.GRID_SOL->GetMaxVelocity() / SIMULATION.dh) * SIMULATION.dt;
+        diffusionCFL = (SIMULATION.EPS* SIMULATION.dt) / (SIMULATION.dh*SIMULATION.dh);
+    }
+    else{
+        double maxVel = SPH2D::GetMaxVelocity();
+        advectionCFL = (maxVel / SPH2D::h) * SIMULATION.dt;
+        diffusionCFL = (SIMULATION.EPS * SIMULATION.dt) / (SPH2D::h * SPH2D::h);
+    }
 
         TELEMETRY.Push(
             currentTime ,
@@ -559,8 +567,16 @@ void SimulationManager::ExportData() {
         SIMULATION.GRID_SOL->ExportGrid(EXPORT_SETTINGS.gridExportCounter);
 
     }
+    
     if(EXPORT_SETTINGS.exportParticleData && (currentIT - 1) % EXPORT_SETTINGS.gridInterval == 0){
-        FLIP::ExportParticles(EXPORT_SETTINGS.gridExportCounter);
+        if(SIM_TYPE == SIM_TYPES::FLIP){
+            if(DIMENSION == 2 ) FLIP2D::ExportParticles(EXPORT_SETTINGS.gridExportCounter);
+            else FLIP3D::ExportParticles(EXPORT_SETTINGS.gridExportCounter);
+        }
+        else if(SIM_TYPE == SIM_TYPES::SPH){
+             if(DIMENSION == 2 ) SPH2D::ExportParticles(EXPORT_SETTINGS.gridExportCounter);
+        }
+
 
     }
 
@@ -660,21 +676,21 @@ void SimulationManager::InitializeSimulation(const std::string& configFile){
 
     if(DIMENSION == 3 && SIM_TYPE == SIM_TYPES::ADI){
 
-        ADI::InitializeADI(SIMULATION.GRID_SOL, SIMULATION.dt, 
+        ADI3D::InitializeADI(SIMULATION.GRID_SOL, SIMULATION.dt, 
                           SIMULATION.VelocityBoundaryFunction, ZERO, 
                           SIMULATION.PressureBoundaryFunction);
-        PressureSolver::InitializePressureSolver(SIMULATION.GRID_SOL, false);
+        PressureSolver3D::InitializePressureSolver(SIMULATION.GRID_SOL, false);
         SIMULATION.GRID_ANT->SetBorder(SIMULATION.VelocityBoundaryFunction,SIMULATION.PressureBoundaryFunction,0);
 
-        momentumStep = ADI::SolveADIStep;
+        momentumStep = ADI3D::SolveADIStep;
         if(GPU_ACCELERATION){
-            pressureStep = PressureSolver::SolvePressure_AMGX;
+            pressureStep = PressureSolver3D::SolvePressure_AMGX;
 
         }
         else{
-              pressureStep = PressureSolver::SolvePressure_EIGEN;
+              pressureStep = PressureSolver3D::SolvePressure_EIGEN;
         }
-        correctionStep = PressureSolver::ProjectPressure;
+        correctionStep = PressureSolver3D::ProjectPressure;
     }
     else if(DIMENSION == 2 && SIM_TYPE == SIM_TYPES::ADI){
 
@@ -701,10 +717,10 @@ void SimulationManager::InitializeSimulation(const std::string& configFile){
                                SIMULATION.VelocityBoundaryFunction2D, ZERO2D, 
                                SIMULATION.PressureBoundaryFunction2D);
         PressureSolver2D::InitializePressureSolver(SIMULATION.GRID_SOL,true);
-        FLIP::InitializeFLIP(SIMULATION.GRID_SOL,SIMULATION.dt,1.0); //MAAKE AAN ALPHA LATER ON SIMCONFIG
+        FLIP2D::InitializeFLIP(SIMULATION.GRID_SOL,SIMULATION.dt,SIMULATION.ALPHA); //MAAKE AAN ALPHA LATER ON SIMCONFIG
         SIMULATION.GRID_ANT->SetBorder(SIMULATION.VelocityBoundaryFunction2D,SIMULATION.PressureBoundaryFunction2D,0);
 
-        momentumStep = FLIP::FLIP_Momentum;
+        momentumStep = FLIP2D::FLIP_Momentum;
         if(GPU_ACCELERATION){
             //std::cout << "ERROR - AMGX IS MAYBE BUGGED! - USE AT YOUR OWN RISK!" << std::endl;;
             pressureStep = PressureSolver2D::SolvePressure_AMGX_VARIABLE;
@@ -714,32 +730,37 @@ void SimulationManager::InitializeSimulation(const std::string& configFile){
               pressureStep = PressureSolver2D::SolvePressure_EIGEN;
         }
 
-        correctionStep = FLIP::FLIP_Correction;
+        correctionStep = FLIP2D::FLIP_Correction;
         
     }
     else if(DIMENSION == 3 && SIM_TYPE == SIM_TYPES::FLIP){
 
-        ADI::InitializeADI(SIMULATION.GRID_SOL, SIMULATION.dt, 
+        ADI3D::InitializeADI(SIMULATION.GRID_SOL, SIMULATION.dt, 
                                SIMULATION.VelocityBoundaryFunction, ZERO, 
                                SIMULATION.PressureBoundaryFunction);
-        PressureSolver::InitializePressureSolver(SIMULATION.GRID_SOL,true);
-        FLIP3D::InitializeFLIP(SIMULATION.GRID_SOL,SIMULATION.dt,1.0); //MAAKE AAN ALPHA LATER ON SIMCONFIG
+        PressureSolver3D::InitializePressureSolver(SIMULATION.GRID_SOL,true);
+        FLIP3D::InitializeFLIP(SIMULATION.GRID_SOL,SIMULATION.dt,SIMULATION.ALPHA); //MAAKE AAN ALPHA LATER ON SIMCONFIG
         SIMULATION.GRID_ANT->SetBorder(SIMULATION.VelocityBoundaryFunction,SIMULATION.PressureBoundaryFunction,0);
 
         momentumStep = FLIP3D::FLIP_Momentum;
         if(GPU_ACCELERATION){
-            //std::cout << "3D PROPER SOLVE NOT YET IMPLEMENTED!" << std::endl;;
-            pressureStep = PressureSolver::SolvePressure_AMGX_VARIABLE;
+            std::cout << "3D PROPER SOLVE NOT YET IMPLEMENTED!" << std::endl;;
+            pressureStep = PressureSolver3D::SolvePressure_AMGX_VARIABLE;
 
         }
         else{
-              pressureStep = PressureSolver::SolvePressure_EIGEN;
+              pressureStep = PressureSolver3D::SolvePressure_EIGEN;
         }
 
         correctionStep = FLIP3D::FLIP_Correction;
 
     }
-
+    else if(DIMENSION == 2 && SIM_TYPE == SIM_TYPES::SPH){
+        SPH2D::InitializeSPH2D(1000000);
+        momentumStep = SPH2D::AdvanceSPH;
+        pressureStep = SPH2D::DummySPH;
+        correctionStep = SPH2D::DummySPH;
+    }
 
 
 }
@@ -755,12 +776,28 @@ void SimulationManager::StepSimulation(GridVisualizer* visualizer){
     else SIMULATION.GRID_SOL->SetGrid(ZERO,ZERO_SCALAR,0); //we might as well make a reset function
     
     if(ADAPTATIVE_TIMESTEP){
-        advectionCFL = (SIMULATION.GRID_ANT->GetMaxVelocity() / SIMULATION.dh) * SIMULATION.dt;
-        diffusionCFL = (SIMULATION.EPS * SIMULATION.dt) / (SIMULATION.dh * SIMULATION.dh);
-        double currentCFL = std::max(diffusionCFL, advectionCFL);
-        double dt_advection = (MAX_CFL * SIMULATION.dh) / SIMULATION.GRID_ANT->GetMaxVelocity();
-        double dt_diffusion = (MAX_CFL * SIMULATION.dh * SIMULATION.dh) / SIMULATION.EPS;
-        SIMULATION.dt = std::min(dt_advection, dt_diffusion);
+        if(SIM_TYPE != SIM_TYPES::SPH){
+            advectionCFL = (SIMULATION.GRID_ANT->GetMaxVelocity() / SIMULATION.dh) * SIMULATION.dt;
+            diffusionCFL = (SIMULATION.EPS * SIMULATION.dt) / (SIMULATION.dh * SIMULATION.dh);
+            double currentCFL = std::max(diffusionCFL, advectionCFL);
+            double dt_advection = (MAX_CFL * SIMULATION.dh) / SIMULATION.GRID_ANT->GetMaxVelocity();
+            double dt_diffusion = (MAX_CFL * SIMULATION.dh * SIMULATION.dh) / SIMULATION.EPS;
+            SIMULATION.dt = std::min(dt_advection, dt_diffusion);
+        }
+    else{
+        double maxVel = SPH2D::GetMaxVelocity();
+        double maxForce = SPH2D::GetMaxForce();
+
+        double dt_cfl = MAX_CFL * SPH2D::h / std::max(maxVel, 0.01);
+        double dt_force = 0.25 * sqrt(SPH2D::h * SPH2D::mass / std::max(maxForce, 1e-3));
+        double dt_viscous = MAX_CFL * SPH2D::h * SPH2D::h / (SIMULATION.EPS + 1e-6);
+
+        // Cap maximum timestep for safety
+        double dt_max = 0.01; 
+
+        SIMULATION.dt = std::min({dt_cfl, dt_force, dt_viscous, dt_max});
+
+    }
    
     }
 

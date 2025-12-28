@@ -8,10 +8,10 @@
 
 #include "math.h"
 
-#ifndef FLIP_H
-#define FLIP_H
+#ifndef FLIP2D_H
+#define FLIP2D_H
 
-class FLIP{
+class FLIP2D{
 
 
     public:

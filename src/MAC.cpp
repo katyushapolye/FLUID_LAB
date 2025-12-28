@@ -857,12 +857,12 @@ double MAC::GetGradPzAt(int i, int j)
 void MAC::AddAcceleration(Vec2 a,double dt){
     //only add to fluid faces
     FOR_EACH_2D_NON_BOUNDARY_U_FACE(
-            if(this->GetSolid(i,j-1) != SOLID_CELL && this->GetSolid(i,j) != SOLID_CELL){
+            if((this->GetSolid(i,j-1) == FLUID_CELL ||this->GetSolid(i,j-1) == EMPTY_CELL) && (this->GetSolid(i,j) == FLUID_CELL || this->GetSolid(i,j) == EMPTY_CELL)){
                 SetU(i, j, GetU(i,j) + a.u*dt);}
             )
 
     FOR_EACH_2D_NON_BOUNDARY_V_FACE(
-            if(this->GetSolid(i-1,j) != SOLID_CELL && this->GetSolid(i,j) != SOLID_CELL){
+            if((this->GetSolid(i-1,j) == FLUID_CELL || this->GetSolid(i-1,j) == EMPTY_CELL)&& (this->GetSolid(i,j) == FLUID_CELL || this->GetSolid(i,j) == EMPTY_CELL)){
                 SetV(i, j, GetV(i,j) + a.v*dt);
             }
     )    

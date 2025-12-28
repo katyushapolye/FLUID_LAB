@@ -1,39 +1,39 @@
-#include "headers/Solvers/PressureSolver.h"
+#include "headers/Solvers/PressureSolver3D.h"
 
-int PressureSolver::Nx = 0;
-int PressureSolver::Ny = 0;
-int PressureSolver::Nz = 0;
-int PressureSolver::NON_ZERO = 0;
-bool PressureSolver::needsFrameUpdate = true;
-double PressureSolver::dt= 0;
-VectorXd PressureSolver::IDP = VectorXd();
+int PressureSolver3D::Nx = 0;
+int PressureSolver3D::Ny = 0;
+int PressureSolver3D::Nz = 0;
+int PressureSolver3D::NON_ZERO = 0;
+bool PressureSolver3D::needsFrameUpdate = true;
+double PressureSolver3D::dt= 0;
+VectorXd PressureSolver3D::IDP = VectorXd();
 
-int *PressureSolver::collums = nullptr;
-int *PressureSolver::rows = nullptr;
-double *PressureSolver::values = nullptr;
-CSRMatrix *PressureSolver::PRESSURE_MATRIX = nullptr;
-AMGXSolver *PressureSolver::AMGX_Handle = nullptr;
+int *PressureSolver3D::collums = nullptr;
+int *PressureSolver3D::rows = nullptr;
+double *PressureSolver3D::values = nullptr;
+CSRMatrix *PressureSolver3D::PRESSURE_MATRIX = nullptr;
+AMGXSolver *PressureSolver3D::AMGX_Handle = nullptr;
 
 
 
-std::vector<Tensor<double, 3>> PressureSolver::PRESSURE_MASK = std::vector<Tensor<double, 3>>();
-SparseMatrix PressureSolver::PRESSURE_MATRIX_EIGEN;
+std::vector<Tensor<double, 3>> PressureSolver3D::PRESSURE_MASK = std::vector<Tensor<double, 3>>();
+SparseMatrix PressureSolver3D::PRESSURE_MATRIX_EIGEN;
 
 
 
 // Expensive function, but it is only called once
-void PressureSolver::InitializePressureSolver(MAC *grid,bool frameUpdate)
+void PressureSolver3D::InitializePressureSolver(MAC *grid,bool frameUpdate)
 {
-    PressureSolver::dt  = SIMULATION.dt;
-    PressureSolver::Nx = SIMULATION.Nx;
-    PressureSolver::Ny = SIMULATION.Ny;
-    PressureSolver::Nz = SIMULATION.Nz;
-    PressureSolver::PRESSURE_MASK.reserve(grid->GetFluidCellCount());
-    PressureSolver::dt = dt;
+    PressureSolver3D::dt  = SIMULATION.dt;
+    PressureSolver3D::Nx = SIMULATION.Nx;
+    PressureSolver3D::Ny = SIMULATION.Ny;
+    PressureSolver3D::Nz = SIMULATION.Nz;
+    PressureSolver3D::PRESSURE_MASK.reserve(grid->GetFluidCellCount());
+    PressureSolver3D::dt = dt;
     double dh = SIMULATION.dh;
-    PressureSolver::IDP = VectorXd(Nx * Ny * Nz);
-    PressureSolver::IDP.setConstant(-1);
-    PressureSolver::needsFrameUpdate = frameUpdate;
+    PressureSolver3D::IDP = VectorXd(Nx * Ny * Nz);
+    PressureSolver3D::IDP.setConstant(-1);
+    PressureSolver3D::needsFrameUpdate = frameUpdate;
 
 
 
@@ -57,7 +57,7 @@ void PressureSolver::InitializePressureSolver(MAC *grid,bool frameUpdate)
                 if (i == 0 || j == 0 || k == 0 || 
                     i == Ny-1 || j == Nx-1 || k == Nz-1)
                 {
-                    PressureSolver::PRESSURE_MASK.push_back(mask);
+                    PressureSolver3D::PRESSURE_MASK.push_back(mask);
                     SetIDP(i, j, k, -1);
                     continue;
                 }
@@ -67,7 +67,7 @@ void PressureSolver::InitializePressureSolver(MAC *grid,bool frameUpdate)
                     grid->GetSolid(i,j,k) == EMPTY_CELL || 
                     grid->GetSolid(i,j,k) == INFLOW_CELL)
                 {
-                    PressureSolver::PRESSURE_MASK.push_back(mask);
+                    PressureSolver3D::PRESSURE_MASK.push_back(mask);
                     SetIDP(i, j, k, -1);
                     continue;
                 }
@@ -142,7 +142,7 @@ void PressureSolver::InitializePressureSolver(MAC *grid,bool frameUpdate)
                 
                 SetIDP(i, j, k, c);
                 c++;
-                PressureSolver::PRESSURE_MASK.push_back(mask);
+                PressureSolver3D::PRESSURE_MASK.push_back(mask);
             }
         }
     }
@@ -317,11 +317,11 @@ void PressureSolver::InitializePressureSolver(MAC *grid,bool frameUpdate)
 
 
 
-    PressureSolver::PRESSURE_MATRIX_EIGEN = mat;
+    PressureSolver3D::PRESSURE_MATRIX_EIGEN = mat;
 
 
     PRESSURE_MATRIX = coo_to_csr(rows,collums,values,NON_ZERO,MatSize,MatSize);
-    PressureSolver::AMGX_Handle = new AMGXSolver();
+    PressureSolver3D::AMGX_Handle = new AMGXSolver();
 
     free(collums);
     free(rows);
@@ -373,11 +373,11 @@ void PressureSolver::InitializePressureSolver(MAC *grid,bool frameUpdate)
 
 }
 
-void PressureSolver::UpdatePressureMatrix_Eigen(MAC* grid){
-    PressureSolver::dt = SIMULATION.dt;
+void PressureSolver3D::UpdatePressureMatrix_Eigen(MAC* grid){
+    PressureSolver3D::dt = SIMULATION.dt;
     double dh = SIMULATION.dh;
-    PressureSolver::IDP = VectorXd(Nx * Ny * Nz);
-    PressureSolver::IDP.setConstant(-1);
+    PressureSolver3D::IDP = VectorXd(Nx * Ny * Nz);
+    PressureSolver3D::IDP.setConstant(-1);
     PRESSURE_MASK.clear();
     NON_ZERO = 0;
 
@@ -396,7 +396,7 @@ void PressureSolver::UpdatePressureMatrix_Eigen(MAC* grid){
                 if (i == 0 || j == 0 || k == 0 || 
                     i == Ny-1 || j == Nx-1 || k == Nz-1)
                 {
-                    PressureSolver::PRESSURE_MASK.push_back(mask);
+                    PressureSolver3D::PRESSURE_MASK.push_back(mask);
                     SetIDP(i, j, k, -1);
                     continue;
                 }
@@ -406,7 +406,7 @@ void PressureSolver::UpdatePressureMatrix_Eigen(MAC* grid){
                     grid->GetSolid(i,j,k) == EMPTY_CELL || 
                     grid->GetSolid(i,j,k) == INFLOW_CELL)
                 {
-                    PressureSolver::PRESSURE_MASK.push_back(mask);
+                    PressureSolver3D::PRESSURE_MASK.push_back(mask);
                     SetIDP(i, j, k, -1);
                     continue;
                 }
@@ -481,7 +481,7 @@ void PressureSolver::UpdatePressureMatrix_Eigen(MAC* grid){
                 
                 SetIDP(i, j, k, c);
                 c++;
-                PressureSolver::PRESSURE_MASK.push_back(mask);
+                PressureSolver3D::PRESSURE_MASK.push_back(mask);
             }
         }
     }
@@ -656,7 +656,7 @@ void PressureSolver::UpdatePressureMatrix_Eigen(MAC* grid){
 
 
 
-    PressureSolver::PRESSURE_MATRIX_EIGEN = mat;
+    PressureSolver3D::PRESSURE_MATRIX_EIGEN = mat;
 
 
     PRESSURE_MATRIX = coo_to_csr(rows,collums,values,NON_ZERO,MatSize,MatSize);
@@ -669,8 +669,8 @@ void PressureSolver::UpdatePressureMatrix_Eigen(MAC* grid){
 
 }
 
-void PressureSolver::SolvePressure_EIGEN(MAC* grid){
-    PressureSolver::dt = SIMULATION.dt;
+void PressureSolver3D::SolvePressure_EIGEN(MAC* grid){
+    PressureSolver3D::dt = SIMULATION.dt;
     CPUTimer timer;
     if(needsFrameUpdate){
         UpdatePressureMatrix_Eigen(grid);
@@ -753,7 +753,7 @@ void PressureSolver::SolvePressure_EIGEN(MAC* grid){
 
 }
 
-void PressureSolver::UpdatePressureMatrix_AMGX(MAC *grid)
+void PressureSolver3D::UpdatePressureMatrix_AMGX(MAC *grid)
 {
     double dt = SIMULATION.dt;
     int Nx = SIMULATION.Nx;
@@ -967,7 +967,7 @@ void PressureSolver::UpdatePressureMatrix_AMGX(MAC *grid)
     PRESSURE_MATRIX_EIGEN = ((-dt)/(dh*dh*SIMULATION.RHO)) * PRESSURE_MATRIX_EIGEN;
 }
 
-void PressureSolver::SolvePressure_AMGX_VARIABLE(MAC *grid)
+void PressureSolver3D::SolvePressure_AMGX_VARIABLE(MAC *grid)
 {
     CPUTimer timer;
     timer.start();
@@ -1111,9 +1111,9 @@ void PressureSolver::SolvePressure_AMGX_VARIABLE(MAC *grid)
         SIMULATION.lastPressureSolveTime = timer.stop();
 }
 
-void PressureSolver::SolvePressure_AMGX(MAC* grid){
+void PressureSolver3D::SolvePressure_AMGX(MAC* grid){
 CPUTimer timer;
-    PressureSolver::dt = SIMULATION.dt;
+    PressureSolver3D::dt = SIMULATION.dt;
     timer.start();
     double dh = grid->dh;
     int MatSize = grid->GetFluidCellCount();
@@ -1251,8 +1251,8 @@ CPUTimer timer;
 }
 
 
-void PressureSolver::ProjectPressure(MAC* grid){
-    PressureSolver::dt = SIMULATION.dt;
+void PressureSolver3D::ProjectPressure(MAC* grid){
+    PressureSolver3D::dt = SIMULATION.dt;
     for (int i = 1; i < Ny-1 ; i++)
     {                  
         for (int j = 1; j < Nx +1-1; j++)

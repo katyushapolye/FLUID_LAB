@@ -34,9 +34,9 @@ struct SIMULATION_CONFIG{
     bool NEEDS_COMPATIBILITY_CONDITION = false;
 
     //FLIP
-
-    int PARTICLE_PER_CELL = 4;
-    double g = -1.0;
+    int PARTICLES_PER_CELL = 4;
+    Vec3 f;
+    double ALPHA = 1.0;
 
 
     Domain domain;
@@ -157,11 +157,13 @@ struct ExportSettings {
 enum class SIM_TYPES {
     ADI,
     FLIP,
+    SPH,
 };
 
 inline std::map<std::string, SIM_TYPES> TYPES = {
     {"ADI", SIM_TYPES::ADI},
-    {"FLIP", SIM_TYPES::FLIP}
+    {"FLIP", SIM_TYPES::FLIP},
+    {"SPH", SIM_TYPES::SPH}
 };
 inline SIM_TYPES SIM_TYPE = SIM_TYPES::ADI;
 

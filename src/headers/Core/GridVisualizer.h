@@ -2,8 +2,9 @@
 #define GRID_VISUALIZER_H
 
 #include "MAC.h"
-#include "../Solvers/FLIP.h"
+#include "../Solvers/FLIP2D.h"
 #include "../Solvers/FLIP3D.h"
+#include "../Solvers/SPH2D.h"
 #include <imgui.h>
 #include <implot.h>
 #include <implot3d.h>
@@ -76,6 +77,8 @@ private:
     int GetNx() const { return (DIMENSION == 2) ? grid2D->Nx : grid3D->Nx; }
     int GetNy() const { return (DIMENSION == 2) ? grid2D->Ny : grid3D->Ny; }
     int GetNz() const { return (DIMENSION == 2) ? 1 : grid3D->Nz; }
+
+    void RenderMAC();
 
     void RenderTelemetryUI();
     void RenderParticles();
@@ -703,7 +706,25 @@ void GridVisualizer::ExtractSliceData() {
 void GridVisualizer::Render(int IT,  double time, double residual, double frameTime, bool& simulationRunning, bool& stepOnce) {
     if ((DIMENSION == 2 && !grid2D) || (DIMENSION == 3 && !grid3D)) return;
     
+   
     start = GetWallTime();
+
+
+    if(SIM_TYPE != SIM_TYPES::SPH){
+        this->RenderAerodynamicsUI();
+        this->RenderMAC();
+    }
+
+    this->RenderTelemetryUI();
+    this->RenderExportUI();
+    this->RenderParticles();
+    end = GetWallTime();
+    this->RenderControlUI(IT,time,residual,frameTime,simulationRunning,stepOnce);
+}
+
+
+void GridVisualizer::RenderMAC(){
+     start = GetWallTime();
     ImGui::Begin("Grid Visualizer", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     
     if (ImGui::BeginTabBar("VisualizationTabs")) {
@@ -1088,106 +1109,210 @@ void GridVisualizer::Render(int IT,  double time, double residual, double frameT
     ImGui::End();
     }
 }
-
-
-
-    this->RenderTelemetryUI();
-    this->RenderAerodynamicsUI();
-    this->RenderExportUI();
-    this->RenderParticles();
-        end = GetWallTime();
-    this->RenderControlUI(IT,time,residual,frameTime,simulationRunning,stepOnce);
 }
 
 
 void GridVisualizer::RenderParticles(){
-    /*
-    if (ImPlot::BeginPlot("Scatter Plot")) {
-        ImPlot::PlotScatter("Data 1", xs1, ys1, 100);
-        ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
-        ImPlot::SetNextMarkerStyle(ImPlotMarker_Square, 6, ImPlot::GetColormapColor(1), IMPLOT_AUTO, ImPlot::GetColormapColor(1));
-        ImPlot::PlotScatter("Data 2", xs2, ys2, 50);
-        ImPlot::PopStyleVar();
-        ImPlot::EndPlot();
-    }
-    */
-   if(DIMENSION == 2){
-
-    if(FLIP::particleCount > 0){
-        static float *xs, *ys;
-        xs = new float[FLIP::particleCount];
-        ys = new float[FLIP::particleCount];
-        for(int p = 0;p < FLIP::particleCount;p++){
-            xs[p] = FLIP::particles[p].x;
-            ys[p]  = FLIP::particles[p].y;
-        }
-
-        float width = 1.0f, height = 1.0f;
-        float aspectRatio = width / height;
-        float baseHeight = 600.0f;
-        float plotHeight = baseHeight;
-        float plotWidth  = plotHeight * aspectRatio;
-        if (ImPlot::BeginPlot("Scatter Plot",ImVec2(plotWidth,plotHeight))) {
-            ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle,1.0);
-            ImPlot::SetupAxisLimits(ImAxis_X1,0.0,1.0);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,0.0,1.0);
-
-            ImPlot::PlotScatter("Particles", xs, ys, FLIP::particleCount);
-
-            ImPlot::EndPlot();
-        }
-
-        delete[] xs;
-        delete[] ys;
-    }
+    // SPH Parameter Tuning Window
+    if(SIM_TYPE == SIM_TYPES::SPH){
+        ImGui::Begin("SPH Parameters", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+        
+        ImGui::Text("Physical Parameters");
+        ImGui::Separator();
+        
+        ImGui::DragScalar("Rest Density", ImGuiDataType_Double, &SPH2D::restDensity, 0.1f, nullptr, nullptr, "%.2f");
+        ImGui::DragScalar("Gas Constant", ImGuiDataType_Double, &SPH2D::gasConstant, 0.1f, nullptr, nullptr, "%.2f");
+        ImGui::DragScalar("Viscosity", ImGuiDataType_Double, &SPH2D::viscosity, 0.001f, nullptr, nullptr, "%.4f");
+        ImGui::DragScalar("Smoothing Length (h)", ImGuiDataType_Double, &SPH2D::h, 0.001f, nullptr, nullptr, "%.4f");
+        ImGui::DragScalar("Particle Mass", ImGuiDataType_Double, &SPH2D::mass, 0.0001f, nullptr, nullptr, "%.6f");
+        ImGui::DragScalar("Collision Damping", ImGuiDataType_Double, &SPH2D::collisionDamping, 0.01f, nullptr, nullptr, "%.3f");
+        
+        ImGui::Spacing();
+        ImGui::Text("Particle Info");
+        ImGui::Separator();
+        ImGui::Text("Active Particles: %d / %d", SPH2D::particleCount, SPH2D::maxParticles);
+        
+        ImGui::End();
     }
 
-   if(DIMENSION == 3){
+    // Original particle visualization code
+    if(DIMENSION == 2 && SIM_TYPE == SIM_TYPES::FLIP){
+        if(FLIP2D::particleCount > 0){
+            static float *xs, *ys;
+            xs = new float[FLIP2D::particleCount];
+            ys = new float[FLIP2D::particleCount];
+            for(int p = 0;p < FLIP2D::particleCount;p++){
+                xs[p] = FLIP2D::particles[p].x;
+                ys[p]  = FLIP2D::particles[p].y;
+            }
 
-    if(FLIP3D::particleCount > 0){
+            float width = 1.0f, height = 1.0f;
+            float aspectRatio = width / height;
+            float baseHeight = 600.0f;
+            float plotHeight = baseHeight;
+            float plotWidth  = plotHeight * aspectRatio;
+            if (ImPlot::BeginPlot("Scatter Plot",ImVec2(plotWidth,plotHeight))) {
+                ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle,1.0);
+                ImPlot::SetupAxisLimits(ImAxis_X1,0.0,1.0);
+                ImPlot::SetupAxisLimits(ImAxis_Y1,0.0,1.0);
 
-        static int stride = 2; 
-        ImGui::SliderInt("Particle Stride", &stride, 1, 100);
-        
-        
-        int sampledCount = (FLIP3D::particleCount + stride - 1) / stride;
-        float *xs, *ys, *zs;
-        xs = new float[sampledCount];
-        ys = new float[sampledCount];
-        zs = new float[sampledCount];
-        
-        int sampleIndex = 0;
-        for(int p = 0; p < FLIP3D::particleCount; p += stride){
-            xs[sampleIndex] = FLIP3D::particles[p].x;
-            ys[sampleIndex] = FLIP3D::particles[p].y;
-            zs[sampleIndex] = FLIP3D::particles[p].z;
-            sampleIndex++;
+                ImPlot::PlotScatter("Particles", xs, ys, FLIP2D::particleCount);
+
+                ImPlot::EndPlot();
+            }
+
+            delete[] xs;
+            delete[] ys;
         }
-        
-        float width = 1.0f, height = 1.0f;
-        float aspectRatio = width / height;
-        float baseHeight = 600.0f;
-        float plotHeight = baseHeight;
-        float plotWidth = plotHeight * aspectRatio;
-        
-        if (ImPlot3D::BeginPlot("Scatter Plot", ImVec2(plotWidth, plotHeight))) {
-            ImPlot3D::SetNextMarkerStyle(ImPlot3DMarker_Square, 1.0);
-            ImPlot3D::SetupAxisLimits(ImAxis3D_X, 0.0, 1.0);
-            ImPlot3D::SetupAxisLimits(ImAxis3D_Y, 0.0, 1.0);
-            ImPlot3D::SetupAxisLimits(ImAxis3D_Z, 0.0, 1.0);
-            ImPlot3D::PlotScatter("Particles", xs, zs, ys, sampledCount);
-            ImPlot3D::EndPlot();
+    }
+
+    if(DIMENSION == 3 && SIM_TYPE == SIM_TYPES::FLIP){
+        if(FLIP3D::particleCount > 0){
+            static int stride = 2; 
+            ImGui::SliderInt("Particle Stride", &stride, 1, 100);
+            
+            int sampledCount = (FLIP3D::particleCount + stride - 1) / stride;
+            float *xs, *ys, *zs;
+            xs = new float[sampledCount];
+            ys = new float[sampledCount];
+            zs = new float[sampledCount];
+            
+            int sampleIndex = 0;
+            for(int p = 0; p < FLIP3D::particleCount; p += stride){
+                xs[sampleIndex] = FLIP3D::particles[p].x;
+                ys[sampleIndex] = FLIP3D::particles[p].y;
+                zs[sampleIndex] = FLIP3D::particles[p].z;
+                sampleIndex++;
+            }
+            
+            float width = 1.0f, height = 1.0f;
+            float aspectRatio = width / height;
+            float baseHeight = 600.0f;
+            float plotHeight = baseHeight;
+            float plotWidth = plotHeight * aspectRatio;
+            
+            if (ImPlot3D::BeginPlot("Scatter Plot", ImVec2(plotWidth, plotHeight))) {
+                ImPlot3D::SetNextMarkerStyle(ImPlot3DMarker_Square, 1.0);
+                ImPlot3D::SetupAxisLimits(ImAxis3D_X, 0.0, 1.0);
+                ImPlot3D::SetupAxisLimits(ImAxis3D_Y, 0.0, 1.0);
+                ImPlot3D::SetupAxisLimits(ImAxis3D_Z, 0.0, 1.0);
+                ImPlot3D::PlotScatter("Particles", xs, zs, ys, sampledCount);
+                ImPlot3D::EndPlot();
+            }
+            
+            delete[] xs;
+            delete[] ys;
+            delete[] zs;
         }
-        
-        delete[] xs;
-        delete[] ys;
-        delete[] zs;
-}
+    }
 
+    // For SPH
+    if(DIMENSION == 2 && SIM_TYPE != SIM_TYPES::FLIP){
+        if(ImGui::BeginTabBar("VisualizationTabs")){
+            if(ImGui::BeginTabItem("SPH Particles 2D")){
+                static int stride = 1; 
+                ImGui::SliderInt("Particle Stride", &stride, 1, 100);
 
-}
+                int sampledCount = (SPH2D::particleCount + stride - 1) / stride;
+                float *xs, *ys, *zs;
+                xs = new float[sampledCount];
+                ys = new float[sampledCount];
+                zs = new float[sampledCount];
 
+                int sampleIndex = 0;
+                for(int p = 0; p < SPH2D::particleCount; p += stride){
+                    xs[sampleIndex] = SPH2D::particles[p].x;
+                    ys[sampleIndex] = SPH2D::particles[p].y;
+                    sampleIndex++;
+                }
 
+                float width = 1.0f, height = 1.0f;
+                float aspectRatio = width / height;
+                float baseHeight = 600.0f;
+                float plotHeight = baseHeight;
+                float plotWidth = plotHeight * aspectRatio;
+
+                if (ImPlot::BeginPlot("Scatter Plot", ImVec2(plotWidth, plotHeight))) {
+                    ImPlot::SetNextMarkerStyle(ImPlotMarker_Square, 1.0);
+                    ImPlot::SetupAxisLimits(ImAxis_X1, 0.0, 1.0);
+                    ImPlot::SetupAxisLimits(ImAxis_Y1, 0.0, 1.0);
+                    ImPlot::PlotScatter("Particles", xs, ys, sampledCount);
+                    ImPlot::EndPlot();
+                }
+
+                delete[] xs;
+                delete[] ys;
+                delete[] zs;
+                ImGui::EndTabItem();
+            }
+            
+            if(ImGui::BeginTabItem("SPH Density Contour")){
+                float width = 1.0f, height = 1.0f;
+                float aspectRatio = width / height;
+                float baseHeight = 600.0f;
+                float plotHeight = baseHeight;
+                float plotWidth = plotHeight * aspectRatio;
+
+                constexpr int M = 256;
+                constexpr int N = 256;
+
+                static float zs[M * N];
+                for (int i = 0; i < M; i++) {
+                    for (int j = 0; j < N; j++) {
+                        int idx = j * M + i;
+                        zs[idx] = SPH2D::GetDensityAt(j*1.0/256.0,i*1.0/256.0);
+                    }
+                }
+            
+                ImPlot::PushColormap(ImPlotColormap_Jet);
+                if (ImPlot::BeginPlot("##Contour", ImVec2(plotWidth, plotHeight))) {
+                    ImPlot::SetupAxes("x","y",0,ImPlotAxisFlags_Invert);
+                    ImPlot::PlotHeatmap("Density", zs,M, N,0,0,nullptr,ImPlotPoint(0,0),ImPlotPoint(1,1),ImPlotHeatmapFlags_ColMajor);
+                    ImPlot::EndPlot();
+                }
+                ImGui::SameLine();
+                float max_density = *std::max_element(zs, zs + M * N);
+                ImPlot::ColormapScale("##HeatScale", 0, max_density,ImVec2(60, plotHeight));
+                ImPlot::PopColormap();
+            
+                ImGui::EndTabItem();
+            }
+            
+            if(ImGui::BeginTabItem("SPH Pressure Contour")){
+                float width = 1.0f, height = 1.0f;
+                float aspectRatio = width / height;
+                float baseHeight = 600.0f;
+                float plotHeight = baseHeight;
+                float plotWidth = plotHeight * aspectRatio;
+
+                constexpr int M = 256;
+                constexpr int N = 256;
+
+                static float zs[M * N];
+                for (int i = 0; i < M; i++) {
+                    for (int j = 0; j < N; j++) {
+                        int idx = j * M + i;
+                        zs[idx] = SPH2D::GetPressureAt(j*1.0/256.0,i*1.0/256.0);
+                    }
+                }
+            
+                ImPlot::PushColormap(ImPlotColormap_Jet);
+                if (ImPlot::BeginPlot("##Contour", ImVec2(plotWidth, plotHeight))) {
+                    ImPlot::SetupAxes("x","y",0,ImPlotAxisFlags_Invert);
+                    ImPlot::PlotHeatmap("Pressure", zs,M, N,0,0,nullptr,ImPlotPoint(0,0),ImPlotPoint(1,1),ImPlotHeatmapFlags_ColMajor);
+                    ImPlot::EndPlot();
+                }
+                ImGui::SameLine();
+                float max_pressure = *std::max_element(zs, zs + M * N);
+                ImPlot::ColormapScale("##HeatScale", 0, max_pressure, ImVec2(60, plotHeight));
+                ImPlot::PopColormap();
+            
+                ImGui::EndTabItem();
+            }
+            
+            ImGui::EndTabBar();
+        }
+    }
 }
 
 void GridVisualizer::RenderControlUI(int IT,  double time, double residual, double frameTime, bool& simulationRunning, bool& stepOnce) {
@@ -1621,8 +1746,10 @@ void GridVisualizer::RenderExportUI() {
         
         ImGui::Separator();
         ImGui::Text("Grid Export");
-        ImGui::Checkbox("Export Grid (VTK)", &EXPORT_SETTINGS.exportGridData);
-        if(SIM_TYPE == SIM_TYPES::FLIP){
+        if(SIM_TYPE != SIM_TYPES::SPH ){
+            ImGui::Checkbox("Export Grid (VTK)", &EXPORT_SETTINGS.exportGridData);
+        }
+        if(SIM_TYPE == SIM_TYPES::FLIP || SIM_TYPE == SIM_TYPES::SPH){
             ImGui::Checkbox("Export Particles (CSV)", &EXPORT_SETTINGS.exportParticleData);
         }
         

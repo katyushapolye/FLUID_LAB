@@ -1,31 +1,31 @@
-#include "headers/Solvers/FLIP.h"
-#include "headers/Solvers/PressureSolver_2D.h"
+#include "headers/Solvers/FLIP2D.h"
+#include "headers/Solvers/PressureSolver2D.h"
 
-int FLIP::particleCount = 0;
-int FLIP::maxParticle = 0;
-int FLIP::particlePerCell = 0.0;
-FLIP::Particle *FLIP::particles = nullptr;
-std::vector<std::vector<std::vector<int>>> FLIP::SPACE_HASH = std::vector<std::vector<std::vector<int>>>();
-MAC FLIP::gridAnt = MAC();
-double FLIP::alpha = 0.0;
-Vec2 FLIP::queuedAcceleration = Vec2();
+int FLIP2D::particleCount = 0;
+int FLIP2D::maxParticle = 0;
+int FLIP2D::particlePerCell = 0.0;
+FLIP2D::Particle *FLIP2D::particles = nullptr;
+std::vector<std::vector<std::vector<int>>> FLIP2D::SPACE_HASH = std::vector<std::vector<std::vector<int>>>();
+MAC FLIP2D::gridAnt = MAC();
+double FLIP2D::alpha = 0.0;
+Vec2 FLIP2D::queuedAcceleration = Vec2();
 
-void FLIP::InitializeFLIP(MAC *grid, double dt, double alpha)
+void FLIP2D::InitializeFLIP(MAC *grid, double dt, double alpha)
 {
     int Nx = SIMULATION.Nx;
     int Ny = SIMULATION.Ny;
     double dh = SIMULATION.dh;
-    FLIP::alpha = alpha;
-    maxParticle = SIMULATION.Nx * SIMULATION.Ny * SIMULATION.PARTICLE_PER_CELL;
-    FLIP::particles = (Particle *)calloc(maxParticle, sizeof(Particle)); // allocate the maximum number possible of particles
+    FLIP2D::alpha = alpha;
+    maxParticle = SIMULATION.Nx * SIMULATION.Ny * SIMULATION.PARTICLES_PER_CELL;
+    FLIP2D::particles = (Particle *)calloc(maxParticle, sizeof(Particle)); // allocate the maximum number possible of particles
 
     gridAnt.InitializeGrid(SIMULATION.domain,DIMENSION == 3? false:true);
     gridAnt.CopyGrid(*grid);
 
     // position a test falling block
     double *offset;
-    int n = sqrt(SIMULATION.PARTICLE_PER_CELL);
-    FLIP::particlePerCell = SIMULATION.PARTICLE_PER_CELL;
+    int n = sqrt(SIMULATION.PARTICLES_PER_CELL);
+    FLIP2D::particlePerCell = SIMULATION.PARTICLES_PER_CELL;
     offset = (double *)malloc(sizeof(double) * n);
     for (int i = 0; i < n; i++)
     {
@@ -33,9 +33,9 @@ void FLIP::InitializeFLIP(MAC *grid, double dt, double alpha)
         // printf("Offset: %f\n",offset[i]);
     }
 
-    for (int i = 0.5 * Ny; i < Ny * 0.9; i++)
+    for (int i = 0.0 * Ny; i < Ny * 0.4; i++)
     {
-        for (int j = 0.3 * Nx; j < Nx * 0.7; j++)
+        for (int j = 0.0 * Nx; j < Nx * 0.4; j++)
         {
             
             for (int io = 0; io < n; io++)
@@ -60,7 +60,7 @@ void FLIP::InitializeFLIP(MAC *grid, double dt, double alpha)
         SPACE_HASH.push_back(std::vector<std::vector<int>>());
         for (int j = 0; j < Nx; j++)
         {
-            SPACE_HASH.at(i).push_back(std::vector<int>(SIMULATION.PARTICLE_PER_CELL)); // preallocatigon of some values
+            SPACE_HASH.at(i).push_back(std::vector<int>(SIMULATION.PARTICLES_PER_CELL)); // preallocatigon of some values
         }
     }
 
@@ -73,25 +73,25 @@ void FLIP::InitializeFLIP(MAC *grid, double dt, double alpha)
     free(offset);
 }
 
-void FLIP::FLIP_Momentum(MAC* gridAnt,MAC* gridSol, double time){
-        FLIP::FLIP_StepBeforeProjection(SIMULATION.GRID_SOL,SIMULATION.dt);
+void FLIP2D::FLIP_Momentum(MAC* gridAnt,MAC* gridSol, double time){
+        FLIP2D::FLIP_StepBeforeProjection(SIMULATION.GRID_SOL,SIMULATION.dt);
         SIMULATION.GRID_ANT->CopyGrid(*SIMULATION.GRID_SOL);
 }
 
-void FLIP::FLIP_Correction(MAC* grid){
+void FLIP2D::FLIP_Correction(MAC* grid){
         PressureSolver2D::ProjectPressure(SIMULATION.GRID_SOL); 
-        FLIP::FLIP_StepAfterProjection(SIMULATION.GRID_SOL,SIMULATION.dt);
+        FLIP2D::FLIP_StepAfterProjection(SIMULATION.GRID_SOL,SIMULATION.dt);
 
 
 }
 
 
-void FLIP::ExportParticles(int IT)
+void FLIP2D::ExportParticles(int IT)
 {
     std::string exportPath = "Exports/FLIP/particles_" + std::to_string(IT) + ".csv";
     std::ofstream outFile(exportPath);
     if(!outFile.is_open()){
-        std::cout << "FLIP EXPORT FAILED!" << std::endl;
+        std::cout << "FLIP2D EXPORT FAILED!" << std::endl;
     }
 
 
@@ -114,7 +114,7 @@ void FLIP::ExportParticles(int IT)
     // std::cout << "Exported " << particleCount << " particles to particles.csv" << std::endl;
 }
 
-void FLIP::ParticleToGrid(MAC *grid)
+void FLIP2D::ParticleToGrid(MAC *grid)
 {
     int Nx = SIMULATION.Nx;
     int Ny = SIMULATION.Ny;
@@ -245,7 +245,7 @@ void FLIP::ParticleToGrid(MAC *grid)
     } // End of parallel region
 }
 
-void FLIP::GridToParticle(MAC *grid)
+void FLIP2D::GridToParticle(MAC *grid)
 {
     int Nx = SIMULATION.Nx;
     int Ny = SIMULATION.Ny;
@@ -291,7 +291,7 @@ void FLIP::GridToParticle(MAC *grid)
         if (std::abs(wu[p]) < 1e-12)
             wu[p] = 0.0;
 
-        // Update particle velocity using FLIP/PIC blend
+        // Update particle velocity using FLIP2D/PIC blend
         if (wu[p] != 0.0)
         {
             particles[p].u = (uW[p] / wu[p]) * (1.0 - alpha) + (particles[p].u + (duW[p] / wu[p])) * alpha;
@@ -340,7 +340,7 @@ void FLIP::GridToParticle(MAC *grid)
         if (std::abs(wv[p]) < 1e-12)
             wv[p] = 0.0;
 
-        // Update particle velocity using FLIP/PIC blend
+        // Update particle velocity using FLIP2D/PIC blend
         if (wv[p] != 0.0)
         {
             particles[p].v = (vW[p] / wv[p]) * (1.0 - alpha) + (particles[p].v + (dvW[p] / wv[p])) * alpha;
@@ -352,12 +352,11 @@ void FLIP::GridToParticle(MAC *grid)
 
 
 // change the numerical method here
-void FLIP::UpdateParticles(double dt)
+void FLIP2D::UpdateParticles(double dt)
 {
     for (int p = 0; p < particleCount; p++)
     {
-        // particles[p].u += 0.0*dt;
-        // particles[p].v += -0.98*dt;
+
 
         particles[p].x += particles[p].u * dt;
         particles[p].y += particles[p].v * dt;
@@ -392,7 +391,7 @@ void FLIP::UpdateParticles(double dt)
     }
 }
 
-void FLIP::UpdateSpaceHash()
+void FLIP2D::UpdateSpaceHash()
 {
     int Nx = SIMULATION.Nx;
     int Ny = SIMULATION.Ny;
@@ -417,7 +416,7 @@ void FLIP::UpdateSpaceHash()
         // pushes to the list
     }
 }
-void FLIP::UpdateFluidCells(MAC *grid)
+void FLIP2D::UpdateFluidCells(MAC *grid)
 {
     grid->ResetFluidCells();
 
@@ -462,7 +461,7 @@ void FLIP::UpdateFluidCells(MAC *grid)
 
 /*
 
-double FLIP::h(double r){
+double FLIP2D::h(double r){
     if(r >= 0.0 && r <= 1.0){
         return 1.0-r;
     }
@@ -473,12 +472,12 @@ double FLIP::h(double r){
         return 0;
     }
 }
-double FLIP::k(double x,double y){
+double FLIP2D::k(double x,double y){
     return h(x/SIMULATION.dh)*h(y/SIMULATION.dh);
 }
 */
 
-double FLIP::h(double r)
+double FLIP2D::h(double r)
 {
     r = std::abs(r); // Take absolute value for symmetry
 
@@ -497,12 +496,12 @@ double FLIP::h(double r)
 }
 
 // 2D kernel using tensor product of 1D kernels
-double FLIP::k(double x, double y)
+double FLIP2D::k(double x, double y)
 {
     return h(x / SIMULATION.dh) * h(y / SIMULATION.dh);
 }
 
-void FLIP::FLIP_StepBeforeProjection(MAC *grid, double dt)
+void FLIP2D::FLIP_StepBeforeProjection(MAC *grid, double dt)
 {
     // impose boundary
     // change the external force later
@@ -522,8 +521,8 @@ void FLIP::FLIP_StepBeforeProjection(MAC *grid, double dt)
 
     Vec2 g;
     
-    //g.u = SIMULATION.g;// * sin((SIMULATION.rotation*M_PI)/180.0);
-    g.v = SIMULATION.g;// * cos((SIMULATION.rotation*M_PI)/180.0);
+    g.u = SIMULATION.f.u;// * sin((SIMULATION.rotation*M_PI)/180.0);
+    g.v = SIMULATION.f.v;// * cos((SIMULATION.rotation*M_PI)/180.0);
 
     // External program forces
     g.u = g.u + queuedAcceleration.u;//* cos((SIMULATION.rotation*M_PI)/180.0);
@@ -531,24 +530,24 @@ void FLIP::FLIP_StepBeforeProjection(MAC *grid, double dt)
 
     grid->AddAcceleration(g, dt);
 }
-void FLIP::FLIP_StepAfterProjection(MAC *grid, double dt)
+void FLIP2D::FLIP_StepAfterProjection(MAC *grid, double dt)
 {
 
     //grid->SetBorder(SIMULATION.VelocityBoundaryFunction2D, SIMULATION.PressureBoundaryFunction2D, 0); // change here later
     GridToParticle(grid);
 }
 
-void FLIP::QueueAcceleration(Vec2 a)
+void FLIP2D::QueueAcceleration(Vec2 a)
 {
     queuedAcceleration = a;
 }
 
-double FLIP::GetTotalKinecticEnergy(){
+double FLIP2D::GetTotalKinecticEnergy(){
     //this is a rough approximation
     //since we have a cell size and particles per cell, we assume that each particle has a mass
     //by the cell size and density we have the mass (all in meters) 1000Kg per meter cubed, lets assume everything has 1 meter depth
     //so our particles mass is pW = 1000*dh*dh*1 / Particle nuum
-    double m = 180.0 / FLIP::particleCount; //cghange here
+    double m = 180.0 / FLIP2D::particleCount; //cghange here
     double v =0;
     double e = 0.0;
     for (int p = 0; p < particleCount; p++)
@@ -566,15 +565,15 @@ double FLIP::GetTotalKinecticEnergy(){
 
 }
 
-double FLIP::GetTotalPotentialEnergy(){
+double FLIP2D::GetTotalPotentialEnergy(){
     //this is a rough approximation
     //since we have a cell size and particles per cell, we assume that each particle has a mass
     //by the cell size and density we have the mass (all in meters) 1000Kg per meter cubed, lets assume everything has 1 meter depth
     //so our particles mass is pW = 1000*dh*dh*1 / Particle nuum
-    //double m = (SIMULATION.RHO * SIMULATION.dh *SIMULATION.dh * 1.0) / FLIP::particlePerCell;
-    double m = 180.0 / FLIP::particleCount; 
+    //double m = (SIMULATION.RHO * SIMULATION.dh *SIMULATION.dh * 1.0) / FLIP2D::particlePerCell;
+    double m = 180.0 / FLIP2D::particleCount; 
     double h = 0.0;
-    double g = SIMULATION.g;
+    double g = SIMULATION.f.v;
     double e = 0.0;
     for (int p = 0; p < particleCount; p++)
     {

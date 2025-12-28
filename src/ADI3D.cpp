@@ -1,73 +1,73 @@
-#include "headers/Solvers/ADI.h"
+#include "headers/Solvers/ADI3D.h"
 //X
-MatrixXd ADI::U_X_Matrix = MatrixXd();
-MatrixXd ADI::V_X_Matrix = MatrixXd();
-MatrixXd ADI::W_X_Matrix = MatrixXd();
-MatrixXd ADI::U_X_CONV_Matrix = MatrixXd();
-MatrixXd ADI::V_X_CONV_Matrix = MatrixXd();
-MatrixXd ADI::W_X_CONV_Matrix = MatrixXd();
-MatrixXd ADI::U_X_DIFF_Matrix = MatrixXd();
-MatrixXd ADI::V_X_DIFF_Matrix = MatrixXd();
-MatrixXd ADI::W_X_DIFF_Matrix = MatrixXd();
+MatrixXd ADI3D::U_X_Matrix = MatrixXd();
+MatrixXd ADI3D::V_X_Matrix = MatrixXd();
+MatrixXd ADI3D::W_X_Matrix = MatrixXd();
+MatrixXd ADI3D::U_X_CONV_Matrix = MatrixXd();
+MatrixXd ADI3D::V_X_CONV_Matrix = MatrixXd();
+MatrixXd ADI3D::W_X_CONV_Matrix = MatrixXd();
+MatrixXd ADI3D::U_X_DIFF_Matrix = MatrixXd();
+MatrixXd ADI3D::V_X_DIFF_Matrix = MatrixXd();
+MatrixXd ADI3D::W_X_DIFF_Matrix = MatrixXd();
 
-VectorXd ADI::U_X_Font = VectorXd();
-VectorXd ADI::V_X_Font = VectorXd();
-VectorXd ADI::W_X_Font = VectorXd();
-VectorXd ADI::U_X_SOL = VectorXd();
-VectorXd ADI::V_X_SOL = VectorXd();
-VectorXd ADI::W_X_SOL = VectorXd();
+VectorXd ADI3D::U_X_Font = VectorXd();
+VectorXd ADI3D::V_X_Font = VectorXd();
+VectorXd ADI3D::W_X_Font = VectorXd();
+VectorXd ADI3D::U_X_SOL = VectorXd();
+VectorXd ADI3D::V_X_SOL = VectorXd();
+VectorXd ADI3D::W_X_SOL = VectorXd();
 
 //Y
 
-MatrixXd ADI::U_Y_Matrix = MatrixXd();
-MatrixXd ADI::V_Y_Matrix = MatrixXd();
-MatrixXd ADI::W_Y_Matrix = MatrixXd();
-MatrixXd ADI::U_Y_CONV_Matrix = MatrixXd();
-MatrixXd ADI::V_Y_CONV_Matrix = MatrixXd();
-MatrixXd ADI::W_Y_CONV_Matrix = MatrixXd();
-MatrixXd ADI::U_Y_DIFF_Matrix = MatrixXd();
-MatrixXd ADI::V_Y_DIFF_Matrix = MatrixXd();
-MatrixXd ADI::W_Y_DIFF_Matrix = MatrixXd();
+MatrixXd ADI3D::U_Y_Matrix = MatrixXd();
+MatrixXd ADI3D::V_Y_Matrix = MatrixXd();
+MatrixXd ADI3D::W_Y_Matrix = MatrixXd();
+MatrixXd ADI3D::U_Y_CONV_Matrix = MatrixXd();
+MatrixXd ADI3D::V_Y_CONV_Matrix = MatrixXd();
+MatrixXd ADI3D::W_Y_CONV_Matrix = MatrixXd();
+MatrixXd ADI3D::U_Y_DIFF_Matrix = MatrixXd();
+MatrixXd ADI3D::V_Y_DIFF_Matrix = MatrixXd();
+MatrixXd ADI3D::W_Y_DIFF_Matrix = MatrixXd();
 
-VectorXd ADI::U_Y_Font = VectorXd();
-VectorXd ADI::V_Y_Font = VectorXd();
-VectorXd ADI::W_Y_Font = VectorXd();
-VectorXd ADI::U_Y_SOL = VectorXd();
-VectorXd ADI::V_Y_SOL = VectorXd();
-VectorXd ADI::W_Y_SOL = VectorXd();
+VectorXd ADI3D::U_Y_Font = VectorXd();
+VectorXd ADI3D::V_Y_Font = VectorXd();
+VectorXd ADI3D::W_Y_Font = VectorXd();
+VectorXd ADI3D::U_Y_SOL = VectorXd();
+VectorXd ADI3D::V_Y_SOL = VectorXd();
+VectorXd ADI3D::W_Y_SOL = VectorXd();
 
 //Z
-MatrixXd ADI::U_Z_Matrix = MatrixXd();
-MatrixXd ADI::V_Z_Matrix = MatrixXd();
-MatrixXd ADI::W_Z_Matrix = MatrixXd();
-MatrixXd ADI::U_Z_CONV_Matrix = MatrixXd();
-MatrixXd ADI::V_Z_CONV_Matrix = MatrixXd();
-MatrixXd ADI::W_Z_CONV_Matrix = MatrixXd();
-MatrixXd ADI::U_Z_DIFF_Matrix = MatrixXd();
-MatrixXd ADI::V_Z_DIFF_Matrix = MatrixXd();
-MatrixXd ADI::W_Z_DIFF_Matrix = MatrixXd();
+MatrixXd ADI3D::U_Z_Matrix = MatrixXd();
+MatrixXd ADI3D::V_Z_Matrix = MatrixXd();
+MatrixXd ADI3D::W_Z_Matrix = MatrixXd();
+MatrixXd ADI3D::U_Z_CONV_Matrix = MatrixXd();
+MatrixXd ADI3D::V_Z_CONV_Matrix = MatrixXd();
+MatrixXd ADI3D::W_Z_CONV_Matrix = MatrixXd();
+MatrixXd ADI3D::U_Z_DIFF_Matrix = MatrixXd();
+MatrixXd ADI3D::V_Z_DIFF_Matrix = MatrixXd();
+MatrixXd ADI3D::W_Z_DIFF_Matrix = MatrixXd();
 
-VectorXd ADI::U_Z_Font = VectorXd();
-VectorXd ADI::V_Z_Font = VectorXd();
-VectorXd ADI::W_Z_Font = VectorXd();
-VectorXd ADI::U_Z_SOL = VectorXd();
-VectorXd ADI::V_Z_SOL = VectorXd();
-VectorXd ADI::W_Z_SOL = VectorXd();
-
-
-MAC ADI::X_STEP_SOL = MAC();
-MAC ADI::Y_STEP_SOL = MAC();
-MAC ADI::Z_STEP_SOL = MAC();
+VectorXd ADI3D::U_Z_Font = VectorXd();
+VectorXd ADI3D::V_Z_Font = VectorXd();
+VectorXd ADI3D::W_Z_Font = VectorXd();
+VectorXd ADI3D::U_Z_SOL = VectorXd();
+VectorXd ADI3D::V_Z_SOL = VectorXd();
+VectorXd ADI3D::W_Z_SOL = VectorXd();
 
 
-double ADI::SIG = 0.0;
-double ADI::dh = 0.0;
+MAC ADI3D::X_STEP_SOL = MAC();
+MAC ADI3D::Y_STEP_SOL = MAC();
+MAC ADI3D::Z_STEP_SOL = MAC();
+
+
+double ADI3D::SIG = 0.0;
+double ADI3D::dh = 0.0;
 
 
 
-Vec3(*ADI::VelocityBorderFunction)(double, double, double,double) = nullptr;
-Vec3(*ADI::VelocityFontFunction)(double, double, double,double) = nullptr;
-double(*ADI::PressureFunction)(double, double, double,double) = nullptr;
+Vec3(*ADI3D::VelocityBorderFunction)(double, double, double,double) = nullptr;
+Vec3(*ADI3D::VelocityFontFunction)(double, double, double,double) = nullptr;
+double(*ADI3D::PressureFunction)(double, double, double,double) = nullptr;
 
 /*
 void ADI::SolveADI_X_U_Step(MAC* gridAnt,MAC* gridSol,MAC* velocityField,double time){
@@ -628,11 +628,11 @@ void ADI::SolveADI_Z_W_Step(MAC* gridAnt,MAC* gridSol,MAC* velocityField,double 
 //PARALLEL OPENMP TESTING
 
 
-void ADI::SolveADI_X_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
+void ADI3D::SolveADI_X_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
     int Nx = gridAnt->Nx;
     int Ny = gridAnt->Ny;
     int Nz = gridAnt->Nz;
-    double dh = ADI::dh;
+    double dh = ADI3D::dh;
     double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3)) * (SIMULATION.EPS);
     double rho = (dt/(6*dh));
@@ -653,7 +653,7 @@ void ADI::SolveADI_X_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
             for(int k = 1; k < Nz-1; k++) {
                 int c = 0;
                 for(int j = 2; j < Nx+1-2; j++) {
-                    double f_ijk = ADI::VelocityFontFunction(j*dh, i*dh + dh/2.0, k*dh + dh/2.0, time).u;
+                    double f_ijk = ADI3D::VelocityFontFunction(j*dh, i*dh + dh/2.0, k*dh + dh/2.0, time).u;
                     //ADI::VelocityBorderFunction(j*dh, i*dh + dh/2.0, k*dh + dh/2.0, time).u;
 
                     double Y_DIFFUSION_TERM = (gridAnt->GetU(i+1,j,k) - 2*gridAnt->GetU(i,j,k) + gridAnt->GetU(i-1,j,k));
@@ -717,11 +717,11 @@ void ADI::SolveADI_X_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
         }
     }
 }
-void ADI::SolveADI_Y_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
+void ADI3D::SolveADI_Y_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
     int Nx = gridSol->Nx;
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
-    double dh = ADI::dh;
+    double dh = ADI3D::dh;
     double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3)) * (SIMULATION.EPS);
     double rho = (dt/(6*dh));
@@ -740,7 +740,7 @@ void ADI::SolveADI_Y_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
             for(int k = 1; k < Nz-1; k++) {
                 int c = 0;
                 for(int i = 1; i < Ny-1; i++) {
-                    double f_ijk = ADI::VelocityFontFunction(j*dh, i*dh + dh/2.0, k*dh + dh/2.0, time).u;
+                    double f_ijk = ADI3D::VelocityFontFunction(j*dh, i*dh + dh/2.0, k*dh + dh/2.0, time).u;
                     
 
                     double X_DIFFUSION_TERM = (gridAnt->GetU(i,j+1,k) - 2*gridAnt->GetU(i,j,k) + gridAnt->GetU(i,j-1,k));
@@ -798,11 +798,11 @@ void ADI::SolveADI_Y_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
         }
     }
 }
-void ADI::SolveADI_Z_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
+void ADI3D::SolveADI_Z_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
     int Nx = gridSol->Nx;
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
-    double dh = ADI::dh;
+    double dh = ADI3D::dh;
     double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3)) * (SIMULATION.EPS);
     double rho = (dt/(6*dh));
@@ -821,7 +821,7 @@ void ADI::SolveADI_Z_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
             for(int j = 2; j < Nx+1-2; j++) {
                 int c = 0;
                 for(int k = 1; k < Nz-1; k++) {
-                    double f_ijk = ADI::VelocityFontFunction(j*dh, i*dh + dh/2.0, k*dh + dh/2.0, time).u;
+                    double f_ijk = ADI3D::VelocityFontFunction(j*dh, i*dh + dh/2.0, k*dh + dh/2.0, time).u;
 
                     double Y_DIFFUSION_TERM = (gridAnt->GetU(i+1,j,k) - 2*gridAnt->GetU(i,j,k) + gridAnt->GetU(i-1,j,k));
                     double X_DIFFUSION_TERM = (gridAnt->GetU(i,j+1,k) - 2*gridAnt->GetU(i,j,k) + gridAnt->GetU(i,j-1,k));
@@ -878,11 +878,11 @@ void ADI::SolveADI_Z_U_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
     }
 }
 
-void ADI::SolveADI_X_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
+void ADI3D::SolveADI_X_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
     int Nx = gridSol->Nx;
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
-    double dh = ADI::dh;
+    double dh = ADI3D::dh;
     double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3)) * (SIMULATION.EPS);
     double rho = (dt/(6*dh));
@@ -901,7 +901,7 @@ void ADI::SolveADI_X_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
             for(int k = 1; k < Nz-1; k++) {
                 int c = 0;
                 for(int j = 1; j < Nx-1; j++) {
-                    double f_ijk = ADI::VelocityFontFunction(j*dh + dh/2.0, i*dh, k*dh + dh/2.0, time).v;
+                    double f_ijk = ADI3D::VelocityFontFunction(j*dh + dh/2.0, i*dh, k*dh + dh/2.0, time).v;
 
                     double Y_DIFFUSION_TERM = (gridAnt->GetV(i+1,j,k) - 2*gridAnt->GetV(i,j,k) + gridAnt->GetV(i-1,j,k));
                     double Z_DIFFUSION_TERM = (gridAnt->GetV(i,j,k+1) - 2*gridAnt->GetV(i,j,k) + gridAnt->GetV(i,j,k-1));
@@ -957,11 +957,11 @@ void ADI::SolveADI_X_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
         }
     }
 }
-void ADI::SolveADI_Y_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
+void ADI3D::SolveADI_Y_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
     int Nx = gridSol->Nx;
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
-    double dh = ADI::dh;
+    double dh = ADI3D::dh;
     double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3)) * (SIMULATION.EPS);
     double rho = (dt/(6*dh));
@@ -980,7 +980,7 @@ void ADI::SolveADI_Y_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
             for(int k = 1; k < Nz-1; k++) {
                 int c = 0;
                 for(int i = 2; i < Ny+1-2; i++) {
-                    double f_ijk = ADI::VelocityFontFunction(j*dh + dh/2.0, i*dh, k*dh + dh/2.0, time).v;
+                    double f_ijk = ADI3D::VelocityFontFunction(j*dh + dh/2.0, i*dh, k*dh + dh/2.0, time).v;
 
                     double X_DIFFUSION_TERM = (gridAnt->GetV(i,j+1,k) - 2*gridAnt->GetV(i,j,k) + gridAnt->GetV(i,j-1,k));
                     double Z_DIFFUSION_TERM = (gridAnt->GetV(i,j,k+1) - 2*gridAnt->GetV(i,j,k) + gridAnt->GetV(i,j,k-1));
@@ -1041,11 +1041,11 @@ void ADI::SolveADI_Y_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
         }
     }
 }
-void ADI::SolveADI_Z_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
+void ADI3D::SolveADI_Z_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
     int Nx = gridSol->Nx;
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
-    double dh = ADI::dh;
+    double dh = ADI3D::dh;
     double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3))* (SIMULATION.EPS);
     double rho = (dt/(6*dh));
@@ -1064,7 +1064,7 @@ void ADI::SolveADI_Z_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
             for(int j = 1; j < Nx-1; j++) {
                 int c = 0;
                 for(int k = 1; k < Nz-1; k++) {
-                    double f_ijk = ADI::VelocityFontFunction(j*dh + dh/2.0, i*dh, k*dh + dh/2.0, time).v;
+                    double f_ijk = ADI3D::VelocityFontFunction(j*dh + dh/2.0, i*dh, k*dh + dh/2.0, time).v;
 
                     double Y_DIFFUSION_TERM = (gridAnt->GetV(i+1,j,k) - 2*gridAnt->GetV(i,j,k) + gridAnt->GetV(i-1,j,k));
                     double X_DIFFUSION_TERM = (gridAnt->GetV(i,j+1,k) - 2*gridAnt->GetV(i,j,k) + gridAnt->GetV(i,j-1,k));
@@ -1122,11 +1122,11 @@ void ADI::SolveADI_Z_V_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
     }
 }
 
-void ADI::SolveADI_X_W_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
+void ADI3D::SolveADI_X_W_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
     int Nx = gridAnt->Nx;
     int Ny = gridAnt->Ny;
     int Nz = gridAnt->Nz;
-    double dh = ADI::dh;
+    double dh = ADI3D::dh;
     double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3))* (SIMULATION.EPS);
     double rho = (dt/(6*dh));
@@ -1145,7 +1145,7 @@ void ADI::SolveADI_X_W_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
             for(int k = 2; k < Nz+1-2; k++) {
                 int c = 0;
                 for(int j = 1; j < Nx-1; j++) {
-                    double f_ijk = ADI::VelocityFontFunction(j*dh + dh/2.0, i*dh + dh/2.0, k*dh, time).w;
+                    double f_ijk = ADI3D::VelocityFontFunction(j*dh + dh/2.0, i*dh + dh/2.0, k*dh, time).w;
 
                     double Y_DIFFUSION_TERM = (gridAnt->GetW(i+1,j,k) - 2*gridAnt->GetW(i,j,k) + gridAnt->GetW(i-1,j,k));
                     double Z_DIFFUSION_TERM = (gridAnt->GetW(i,j,k+1) - 2*gridAnt->GetW(i,j,k) + gridAnt->GetW(i,j,k-1));
@@ -1199,11 +1199,11 @@ void ADI::SolveADI_X_W_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
         }
     }
 }
-void ADI::SolveADI_Y_W_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
+void ADI3D::SolveADI_Y_W_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
     int Nx = gridSol->Nx;
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
-    double dh = ADI::dh;
+    double dh = ADI3D::dh;
     double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3))* (SIMULATION.EPS);
     double rho = (dt/(6*dh));
@@ -1222,7 +1222,7 @@ void ADI::SolveADI_Y_W_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
             for(int k = 2; k < Nz+1-2; k++) {
                 int c = 0;
                 for(int i = 1; i < Ny-1; i++) {
-                    double f_ijk = ADI::VelocityFontFunction(j*dh + dh/2.0, i*dh + dh/2.0, k*dh, time).w;
+                    double f_ijk = ADI3D::VelocityFontFunction(j*dh + dh/2.0, i*dh + dh/2.0, k*dh, time).w;
 
                     double X_DIFFUSION_TERM = (gridAnt->GetW(i,j+1,k) - 2*gridAnt->GetW(i,j,k) + gridAnt->GetW(i,j-1,k));
                     double Z_DIFFUSION_TERM = (gridAnt->GetW(i,j,k+1) - 2*gridAnt->GetW(i,j,k) + gridAnt->GetW(i,j,k-1));
@@ -1277,11 +1277,11 @@ void ADI::SolveADI_Y_W_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
         }
     }
 }
-void ADI::SolveADI_Z_W_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
+void ADI3D::SolveADI_Z_W_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityField, double time) {
     int Nx = gridSol->Nx;
     int Ny = gridSol->Ny;
     int Nz = gridSol->Nz;
-    double dh = ADI::dh;
+    double dh = ADI3D::dh;
     double dt = SIMULATION.dt;
     double sig = (dt/(dh*dh*3))* (SIMULATION.EPS);
     double rho = (dt/(6*dh));
@@ -1300,7 +1300,7 @@ void ADI::SolveADI_Z_W_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
             for(int j = 1; j < Nx-1; j++) {
                 int c = 0;
                 for(int k = 2; k < Nz+1-2; k++) {
-                    double f_ijk = ADI::VelocityFontFunction(j*dh + dh/2.0, i*dh + dh/2.0, k*dh, time).w;
+                    double f_ijk = ADI3D::VelocityFontFunction(j*dh + dh/2.0, i*dh + dh/2.0, k*dh, time).w;
 
                     double Y_DIFFUSION_TERM = (gridAnt->GetW(i+1,j,k) - 2*gridAnt->GetW(i,j,k) + gridAnt->GetW(i-1,j,k));
                     double X_DIFFUSION_TERM = (gridAnt->GetW(i,j+1,k) - 2*gridAnt->GetW(i,j,k) + gridAnt->GetW(i,j-1,k));
@@ -1358,19 +1358,19 @@ void ADI::SolveADI_Z_W_Step_OPENMP(MAC* gridAnt, MAC* gridSol, MAC* velocityFiel
 
 
 
-void ADI::InitializeADI(MAC* grid,double dt,Vec3(*VelocityBorderFunction)(double, double, double,double),Vec3(*VelocityFont)(double, double, double,double),double(*PressureFunction)(double, double, double,double)){
+void ADI3D::InitializeADI(MAC* grid,double dt,Vec3(*VelocityBorderFunction)(double, double, double,double),Vec3(*VelocityFont)(double, double, double,double),double(*PressureFunction)(double, double, double,double)){
     int Nx = grid->Nx;
     int Ny = grid->Ny;
     int Nz = grid->Nz;
 
-    ADI::VelocityBorderFunction = VelocityBorderFunction;
-    ADI::VelocityFontFunction = VelocityFont;
-    ADI::PressureFunction = PressureFunction;
+    ADI3D::VelocityBorderFunction = VelocityBorderFunction;
+    ADI3D::VelocityFontFunction = VelocityFont;
+    ADI3D::PressureFunction = PressureFunction;
 
-    ADI::dh = grid->dh;
+    ADI3D::dh = grid->dh;
     
     //sigma coefficient
-    ADI::SIG = (dt/(dh*dh*3.0))* (SIMULATION.EPS);
+    ADI3D::SIG = (dt/(dh*dh*3.0))* (SIMULATION.EPS);
 
 
     
@@ -1380,25 +1380,25 @@ void ADI::InitializeADI(MAC* grid,double dt,Vec3(*VelocityBorderFunction)(double
     int v_size = (Nx)     - 2;   // V matrix size is normal
     int w_size = (Nx)     - 2;   // W matrix size
     
-    ADI::U_X_Matrix = MatrixXd::Zero(u_size, u_size);
-    ADI::V_X_Matrix = MatrixXd::Zero(v_size, v_size);
-    ADI::W_X_Matrix = MatrixXd::Zero(w_size, w_size);
+    ADI3D::U_X_Matrix = MatrixXd::Zero(u_size, u_size);
+    ADI3D::V_X_Matrix = MatrixXd::Zero(v_size, v_size);
+    ADI3D::W_X_Matrix = MatrixXd::Zero(w_size, w_size);
 
-    ADI::U_X_CONV_Matrix = MatrixXd::Zero(u_size, u_size);
-    ADI::V_X_CONV_Matrix = MatrixXd::Zero(v_size, v_size);
-    ADI::W_X_CONV_Matrix = MatrixXd::Zero(w_size, w_size);
+    ADI3D::U_X_CONV_Matrix = MatrixXd::Zero(u_size, u_size);
+    ADI3D::V_X_CONV_Matrix = MatrixXd::Zero(v_size, v_size);
+    ADI3D::W_X_CONV_Matrix = MatrixXd::Zero(w_size, w_size);
 
-    ADI::U_X_DIFF_Matrix = MatrixXd::Zero(u_size, u_size);
-    ADI::V_X_DIFF_Matrix = MatrixXd::Zero(v_size, v_size);
-    ADI::W_X_DIFF_Matrix = MatrixXd::Zero(w_size, w_size);
+    ADI3D::U_X_DIFF_Matrix = MatrixXd::Zero(u_size, u_size);
+    ADI3D::V_X_DIFF_Matrix = MatrixXd::Zero(v_size, v_size);
+    ADI3D::W_X_DIFF_Matrix = MatrixXd::Zero(w_size, w_size);
 
-    ADI::U_X_Font = VectorXd::Zero(u_size);
-    ADI::V_X_Font = VectorXd::Zero(v_size);
-    ADI::W_X_Font = VectorXd::Zero(w_size);
+    ADI3D::U_X_Font = VectorXd::Zero(u_size);
+    ADI3D::V_X_Font = VectorXd::Zero(v_size);
+    ADI3D::W_X_Font = VectorXd::Zero(w_size);
 
-    ADI::U_X_SOL = VectorXd::Zero(u_size);
-    ADI::V_X_SOL = VectorXd::Zero(v_size);
-    ADI::W_X_SOL = VectorXd::Zero(w_size);
+    ADI3D::U_X_SOL = VectorXd::Zero(u_size);
+    ADI3D::V_X_SOL = VectorXd::Zero(v_size);
+    ADI3D::W_X_SOL = VectorXd::Zero(w_size);
     
     // Set main diagonals
     //ADI::SIG = (dt / (grid->dh * 3.0)); past definition
@@ -1432,25 +1432,25 @@ void ADI::InitializeADI(MAC* grid,double dt,Vec3(*VelocityBorderFunction)(double
     v_size = (Ny+1)   - 4;   
     w_size = (Ny)     - 2;   
 
-    ADI::U_Y_Matrix = MatrixXd::Zero(u_size, u_size);
-    ADI::V_Y_Matrix = MatrixXd::Zero(v_size, v_size);
-    ADI::W_Y_Matrix = MatrixXd::Zero(w_size, w_size);
+    ADI3D::U_Y_Matrix = MatrixXd::Zero(u_size, u_size);
+    ADI3D::V_Y_Matrix = MatrixXd::Zero(v_size, v_size);
+    ADI3D::W_Y_Matrix = MatrixXd::Zero(w_size, w_size);
 
-    ADI::U_Y_CONV_Matrix = MatrixXd::Zero(u_size, u_size);
-    ADI::V_Y_CONV_Matrix = MatrixXd::Zero(v_size, v_size);
-    ADI::W_Y_CONV_Matrix = MatrixXd::Zero(w_size, w_size);
+    ADI3D::U_Y_CONV_Matrix = MatrixXd::Zero(u_size, u_size);
+    ADI3D::V_Y_CONV_Matrix = MatrixXd::Zero(v_size, v_size);
+    ADI3D::W_Y_CONV_Matrix = MatrixXd::Zero(w_size, w_size);
 
-    ADI::U_Y_DIFF_Matrix = MatrixXd::Zero(u_size, u_size);
-    ADI::V_Y_DIFF_Matrix = MatrixXd::Zero(v_size, v_size);
-    ADI::W_Y_DIFF_Matrix = MatrixXd::Zero(w_size, w_size);
+    ADI3D::U_Y_DIFF_Matrix = MatrixXd::Zero(u_size, u_size);
+    ADI3D::V_Y_DIFF_Matrix = MatrixXd::Zero(v_size, v_size);
+    ADI3D::W_Y_DIFF_Matrix = MatrixXd::Zero(w_size, w_size);
 
-    ADI::U_Y_Font=  VectorXd::Zero(u_size);
-    ADI::V_Y_Font = VectorXd::Zero(v_size);
-    ADI::W_Y_Font = VectorXd::Zero(w_size);
+    ADI3D::U_Y_Font=  VectorXd::Zero(u_size);
+    ADI3D::V_Y_Font = VectorXd::Zero(v_size);
+    ADI3D::W_Y_Font = VectorXd::Zero(w_size);
 
-    ADI::U_Y_SOL=  VectorXd::Zero(u_size);
-    ADI::V_Y_SOL = VectorXd::Zero(v_size);
-    ADI::W_Y_SOL = VectorXd::Zero(w_size);
+    ADI3D::U_Y_SOL=  VectorXd::Zero(u_size);
+    ADI3D::V_Y_SOL = VectorXd::Zero(v_size);
+    ADI3D::W_Y_SOL = VectorXd::Zero(w_size);
     
     // Set main diagonals
     U_Y_DIFF_Matrix.diagonal() = VectorXd::Constant(u_size, 2 * SIG + 1);
@@ -1478,26 +1478,26 @@ void ADI::InitializeADI(MAC* grid,double dt,Vec3(*VelocityBorderFunction)(double
     v_size = (Nz)     - 2;   
     w_size = (Nz+1)   - 4;   
 
-    ADI::U_Z_Matrix = MatrixXd::Zero(u_size, u_size);
-    ADI::V_Z_Matrix = MatrixXd::Zero(v_size, v_size);
-    ADI::W_Z_Matrix = MatrixXd::Zero(w_size, w_size);
+    ADI3D::U_Z_Matrix = MatrixXd::Zero(u_size, u_size);
+    ADI3D::V_Z_Matrix = MatrixXd::Zero(v_size, v_size);
+    ADI3D::W_Z_Matrix = MatrixXd::Zero(w_size, w_size);
 
-    ADI::U_Z_CONV_Matrix = MatrixXd::Zero(u_size, u_size);
-    ADI::V_Z_CONV_Matrix = MatrixXd::Zero(v_size, v_size);
-    ADI::W_Z_CONV_Matrix = MatrixXd::Zero(w_size, w_size);
+    ADI3D::U_Z_CONV_Matrix = MatrixXd::Zero(u_size, u_size);
+    ADI3D::V_Z_CONV_Matrix = MatrixXd::Zero(v_size, v_size);
+    ADI3D::W_Z_CONV_Matrix = MatrixXd::Zero(w_size, w_size);
 
 
-    ADI::U_Z_DIFF_Matrix = MatrixXd::Zero(u_size, u_size);
-    ADI::V_Z_DIFF_Matrix = MatrixXd::Zero(v_size, v_size);
-    ADI::W_Z_DIFF_Matrix = MatrixXd::Zero(w_size, w_size);
+    ADI3D::U_Z_DIFF_Matrix = MatrixXd::Zero(u_size, u_size);
+    ADI3D::V_Z_DIFF_Matrix = MatrixXd::Zero(v_size, v_size);
+    ADI3D::W_Z_DIFF_Matrix = MatrixXd::Zero(w_size, w_size);
 
-    ADI::U_Z_Font=  VectorXd::Zero(u_size);
-    ADI::V_Z_Font = VectorXd::Zero(v_size);
-    ADI::W_Z_Font = VectorXd::Zero(w_size);
+    ADI3D::U_Z_Font=  VectorXd::Zero(u_size);
+    ADI3D::V_Z_Font = VectorXd::Zero(v_size);
+    ADI3D::W_Z_Font = VectorXd::Zero(w_size);
 
-    ADI::U_Z_SOL  = VectorXd::Zero(u_size);
-    ADI::V_Z_SOL  = VectorXd::Zero(v_size);
-    ADI::W_Z_SOL  = VectorXd::Zero(w_size);
+    ADI3D::U_Z_SOL  = VectorXd::Zero(u_size);
+    ADI3D::V_Z_SOL  = VectorXd::Zero(v_size);
+    ADI3D::W_Z_SOL  = VectorXd::Zero(w_size);
     
     // Set main diagonals
     U_Z_DIFF_Matrix.diagonal() = VectorXd::Constant(u_size, 2 * SIG + 1);
@@ -1519,20 +1519,20 @@ void ADI::InitializeADI(MAC* grid,double dt,Vec3(*VelocityBorderFunction)(double
         W_Z_DIFF_Matrix(i-1, i) = -SIG;      
     }
 
-    ADI::X_STEP_SOL.InitializeGrid(grid->omega);
-    ADI::Y_STEP_SOL.InitializeGrid(grid->omega);
-    ADI::Z_STEP_SOL.InitializeGrid(grid->omega);
+    ADI3D::X_STEP_SOL.InitializeGrid(grid->omega);
+    ADI3D::Y_STEP_SOL.InitializeGrid(grid->omega);
+    ADI3D::Z_STEP_SOL.InitializeGrid(grid->omega);
 
-    ADI::X_STEP_SOL.CopyGrid(*grid);
-    ADI::Y_STEP_SOL.CopyGrid(*grid);
-    ADI::Z_STEP_SOL.CopyGrid(*grid);
+    ADI3D::X_STEP_SOL.CopyGrid(*grid);
+    ADI3D::Y_STEP_SOL.CopyGrid(*grid);
+    ADI3D::Z_STEP_SOL.CopyGrid(*grid);
 
 
 
 }
 
 
-void ADI::SolveADIStep(MAC* gridAnt,MAC* gridSol,double time){
+void ADI3D::SolveADIStep(MAC* gridAnt,MAC* gridSol,double time){
 
     //commoon to everyone
     //MAC X_STEP_SOL = MAC();
@@ -1545,7 +1545,7 @@ void ADI::SolveADIStep(MAC* gridAnt,MAC* gridSol,double time){
     //Z_STEP_SOL.SetGrid(VelocityBorderFunction,PressureFunction,time+dt);
 
     if(ADAPTATIVE_TIMESTEP){ //we need to rebuildd the precalculated diffusion matrices
-        ADI::SIG = (SIMULATION.dt/(dh*dh*3.0))* (SIMULATION.EPS);
+        ADI3D::SIG = (SIMULATION.dt/(dh*dh*3.0))* (SIMULATION.EPS);
               //X DIR MATRIXES
         int u_size = (gridAnt->Nx + 1) - 4;   // U matrix size at x dir has less nodes, check diagram
         int v_size = (gridAnt->Nx)     - 2;   // V matrix size is normal
@@ -1628,24 +1628,24 @@ void ADI::SolveADIStep(MAC* gridAnt,MAC* gridSol,double time){
 
  
     time += SIMULATION.dt/3.0;
-    ADI::X_STEP_SOL.SetBorder(ADI::VelocityBorderFunction,ADI::PressureFunction,time);
-    if(SIMULATION.level == LevelConfiguration::STEP || SIMULATION.level == LevelConfiguration::OBSTACLE) ADI::X_STEP_SOL.SetNeumannBorder();
+    ADI3D::X_STEP_SOL.SetBorder(ADI3D::VelocityBorderFunction,ADI3D::PressureFunction,time);
+    if(SIMULATION.level == LevelConfiguration::STEP || SIMULATION.level == LevelConfiguration::OBSTACLE) ADI3D::X_STEP_SOL.SetNeumannBorder();
     SolveADI_X_U_Step_OPENMP(gridAnt,&X_STEP_SOL,gridAnt,time);
     SolveADI_X_V_Step_OPENMP(gridAnt,&X_STEP_SOL,gridAnt,time);
     SolveADI_X_W_Step_OPENMP(gridAnt,&X_STEP_SOL,gridAnt,time);
 
 
     time += SIMULATION.dt/3.0;
-    ADI::Y_STEP_SOL.SetBorder(ADI::VelocityBorderFunction,ADI::PressureFunction,time);
-    if(SIMULATION.level == LevelConfiguration::STEP || SIMULATION.level == LevelConfiguration::OBSTACLE) ADI::Y_STEP_SOL.SetNeumannBorder();
+    ADI3D::Y_STEP_SOL.SetBorder(ADI3D::VelocityBorderFunction,ADI3D::PressureFunction,time);
+    if(SIMULATION.level == LevelConfiguration::STEP || SIMULATION.level == LevelConfiguration::OBSTACLE) ADI3D::Y_STEP_SOL.SetNeumannBorder();
     SolveADI_Y_U_Step_OPENMP(&X_STEP_SOL,&Y_STEP_SOL,gridAnt,time);
     SolveADI_Y_V_Step_OPENMP(&X_STEP_SOL,&Y_STEP_SOL,gridAnt,time);
     SolveADI_Y_W_Step_OPENMP(&X_STEP_SOL,&Y_STEP_SOL,gridAnt,time);
 
 
     time += SIMULATION.dt/3.0;
-    ADI::Z_STEP_SOL.SetBorder(ADI::VelocityBorderFunction,ADI::PressureFunction,time);
-    if(SIMULATION.level == LevelConfiguration::STEP || SIMULATION.level == LevelConfiguration::OBSTACLE) ADI::Z_STEP_SOL.SetNeumannBorder();
+    ADI3D::Z_STEP_SOL.SetBorder(ADI3D::VelocityBorderFunction,ADI3D::PressureFunction,time);
+    if(SIMULATION.level == LevelConfiguration::STEP || SIMULATION.level == LevelConfiguration::OBSTACLE) ADI3D::Z_STEP_SOL.SetNeumannBorder();
     SolveADI_Z_U_Step_OPENMP(&Y_STEP_SOL,&Z_STEP_SOL,gridAnt,time);
     SolveADI_Z_V_Step_OPENMP(&Y_STEP_SOL,&Z_STEP_SOL,gridAnt,time);
     SolveADI_Z_W_Step_OPENMP(&Y_STEP_SOL,&Z_STEP_SOL,gridAnt,time);

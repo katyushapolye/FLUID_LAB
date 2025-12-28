@@ -1,5 +1,5 @@
-#ifndef ADI_H
-#define ADI_H
+#ifndef ADI3D_H
+#define ADI3D_H
 
 #include "../Core/MAC.h"
 #include "../Core/Functions.h"
@@ -14,7 +14,7 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 
-class ADI
+class ADI3D
 {
 private:
     //for efficiency, we allocate LOTS of matrices only once

@@ -3,16 +3,7 @@
 #include <time.h>
 #include <sstream>
 
-#include "headers/Core/MAC.h"
-#include "headers/Core/Functions.h"
-#include "headers/Core/Definitions.h"
-#include "headers/Core/ConfigReader.h"
-#include "headers/Core/GridVisualizer.h"
-#include "headers/Solvers/ADI.h"
-#include "headers/Solvers/ADI_2D.h"
-#include "headers/Solvers/PressureSolver.h"
-#include "headers/Solvers/PressureSolver_2D.h"
-#include "headers/Solvers/FLIP.h"
+
 
 
 #include "headers/Core/SimulationManager.h"
@@ -30,6 +21,7 @@
 
 //what to do
 //investigate the v velocity at the top of the doman in flip, not really a very bad bug and doesnt really make a differnce, just seems weird. happens on both 2d and 3d
+    // I have conclude it is just a visualization thing, becase of the extra point on each dir
 //Add strohal number and frequency to the aerodynamics telemetry
 // add ADI difusion to flip, which means altering ADI to take into account empty cells, the same way we consider the solid mask for ease
 //actually start compiling results 

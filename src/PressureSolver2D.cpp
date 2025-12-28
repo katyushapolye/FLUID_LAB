@@ -1,4 +1,4 @@
-#include "headers/Solvers/PressureSolver_2D.h"
+#include "headers/Solvers/PressureSolver2D.h"
 
 int PressureSolver2D::Nx = 0;
 int PressureSolver2D::Ny = 0;

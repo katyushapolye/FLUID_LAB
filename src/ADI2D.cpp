@@ -1,4 +1,4 @@
-#include "headers/Solvers/ADI_2D.h"
+#include "headers/Solvers/ADI2D.h"
 //X
 MatrixXd ADI2D::U_X_Matrix = MatrixXd();
 MatrixXd ADI2D::V_X_Matrix = MatrixXd();

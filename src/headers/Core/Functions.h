@@ -369,7 +369,7 @@ inline int OBSTACLE_SOLID_MASK_2D(int  i,int j){
 
 inline Vec2 DAMBREAK_FONT_2D(double x, double y,double t){
     Vec2 r;
-    r.u = SIMULATION.g;
+    r.u = SIMULATION.f.v;
 
     //if(y >= 1.0 - (SIMULATION.dh*1.55)){
     //    r.u = 1.0;
@@ -424,7 +424,7 @@ inline int DAMBREAK_SOLID_MASK_2D(int i,int j){
 inline Vec3 DAMBREAK_FONT(double x, double y, double z, double t){
     Vec3 r;
     r.u = 0.0;
-    r.v = SIMULATION.g;
+    r.v = SIMULATION.f.v;
     r.w = 0.0;
     //if(y >= 1.0 - (SIMULATION.dh*1.55)){
     //    r.u = 1.0;

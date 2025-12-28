@@ -27,7 +27,7 @@ using Eigen::ConjugateGradient;
 typedef Eigen::Triplet<double> Triplet;
 typedef Eigen::SparseMatrix<double> SparseMatrix;
 typedef Eigen::BiCGSTAB<SparseMatrix> BiCGSTABSolver;
-class PressureSolver
+class PressureSolver3D
 {
 private:
     static int Nx,Ny,Nz;

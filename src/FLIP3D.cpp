@@ -1,5 +1,5 @@
 #include "headers/Solvers/FLIP3D.h"
-#include "headers/Solvers/PressureSolver.h"
+#include "headers/Solvers/PressureSolver3D.h"
 
 int FLIP3D::particleCount = 0;
 int FLIP3D::maxParticle = 0;
@@ -17,7 +17,7 @@ void FLIP3D::InitializeFLIP(MAC *grid, double dt, double alpha)
     int Nz = SIMULATION.Nz;
     double dh = SIMULATION.dh;
     FLIP3D::alpha = alpha;
-    maxParticle = SIMULATION.Nx * SIMULATION.Ny * SIMULATION.Nz * SIMULATION.PARTICLE_PER_CELL;
+    maxParticle = SIMULATION.Nx * SIMULATION.Ny * SIMULATION.Nz * SIMULATION.PARTICLES_PER_CELL;
     FLIP3D::particles = (Particle *)calloc(maxParticle, sizeof(Particle));
 
     gridAnt.InitializeGrid(SIMULATION.domain, false);
@@ -25,19 +25,19 @@ void FLIP3D::InitializeFLIP(MAC *grid, double dt, double alpha)
 
     // Position particles in initial volume
     double *offset;
-    int n = cbrt(16);
-    FLIP3D::particlePerCell = 16; //handle
+    int n = cbrt(SIMULATION.PARTICLES_PER_CELL);
+    FLIP3D::particlePerCell = SIMULATION.PARTICLES_PER_CELL; //handle
     offset = (double *)malloc(sizeof(double) * n);
     for (int i = 0; i < n; i++)
     {
         offset[i] = ((i + 1) * 1.0) / (double)(n + 1);
     }
 
-    for (int i = 0.5 * Ny; i < Ny * 0.9; i++)
+    for (int i = 0.0 * Ny; i < Ny * 0.4; i++)
     {
-        for (int j = 0.3 * Nx; j < Nx * 0.7; j++)
+        for (int j = 0.0 * Nx; j < Nx * 0.4; j++)
         {
-            for (int k = 0.3 * Nz; k < Nz * 0.7; k++)
+            for (int k = 0.0 * Nz; k < Nz * 1.0; k++)
             {
                 for (int io = 0; io < n; io++)
                 {
@@ -71,7 +71,7 @@ void FLIP3D::InitializeFLIP(MAC *grid, double dt, double alpha)
             SPACE_HASH.at(i).push_back(std::vector<std::vector<int>>());
             for (int k = 0; k < Nz; k++)
             {
-                SPACE_HASH.at(i).at(j).push_back(std::vector<int>(SIMULATION.PARTICLE_PER_CELL));
+                SPACE_HASH.at(i).at(j).push_back(std::vector<int>(SIMULATION.PARTICLES_PER_CELL));
             }
         }
     }
@@ -88,7 +88,7 @@ void FLIP3D::FLIP_Momentum(MAC* gridAnt, MAC* gridSol, double time)
 
 void FLIP3D::FLIP_Correction(MAC* grid)
 {
-    PressureSolver::ProjectPressure(SIMULATION.GRID_SOL); //
+    PressureSolver3D::ProjectPressure(SIMULATION.GRID_SOL); //
     FLIP3D::FLIP_StepAfterProjection(SIMULATION.GRID_SOL, SIMULATION.dt);
 }
 
@@ -675,9 +675,9 @@ void FLIP3D::FLIP_StepBeforeProjection(MAC *grid, double dt)
     gridAnt.CopyGrid(*grid);
 
     Vec3 g;
-    g.u = 0.0;
-    g.v = SIMULATION.g;
-    g.w = 0.0;
+    g.u = SIMULATION.f.u;
+    g.v = SIMULATION.f.v;
+    g.w = SIMULATION.f.w;
 
     // External program forces
     g.u = g.u + queuedAcceleration.u;
@@ -718,7 +718,7 @@ double FLIP3D::GetTotalPotentialEnergy()
 {
     double m = 180.0 / FLIP3D::particleCount;
     double h = 0.0;
-    double g = SIMULATION.g;
+    double g = SIMULATION.f.v;
     double e = 0.0;
     
     for (int p = 0; p < particleCount; p++)
