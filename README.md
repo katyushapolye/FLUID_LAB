@@ -23,6 +23,9 @@ ADI(3D/2D) Eulerian Solver:
    
 FLIP(3D/2D)[4] & SPH(2D)[5] Solvers:
  - Dam Break scenario
+ 
+ <img width="1022" height="512" alt="image" src="https://github.com/user-attachments/assets/211fd141-5eee-47e7-b1f2-dbd587aebde7" />
+
 
 
 Currently, the implementation is powered with:
